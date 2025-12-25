@@ -25,7 +25,7 @@
     /* NAVBAR */
     .nav{
       position:fixed; top:0; left:0; right:0; height:72px; padding:0 22px;
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:flex-end;
       background:rgba(10,15,20,.8); backdrop-filter:blur(12px);
       border-bottom:1px solid rgba(255,255,255,.06); z-index:100;
     }
@@ -46,24 +46,29 @@
     }
     .hero-logo{ width:280px; margin-bottom:15px; filter:drop-shadow(0 0 20px var(--sol-a)); }
     .hero-subtitle{ color:var(--muted); font-size:1.1rem; }
+    /* SUPPLY */
+    .supply{ font-size:1.1rem; text-align:center; margin:20px 0; color:var(--sol-a); font-weight:600; }
     /* SECTIONS */
     .sections{
       display:grid; grid-template-columns:repeat(4,1fr); gap:20px;
     }
     .card{
-      background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.08);
-      border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow);
+      background:linear-gradient(135deg, rgba(0,0,0,.5), rgba(20,241,149,.1)); border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow), inset 0 0 20px rgba(20,241,149,.2);
+      transition:transform 0.3s; 
     }
-    .card h3{ font-size:1.2rem; margin-bottom:12px; }
-    .card p{ font-size:0.9rem; color:var(--muted); line-height:1.4; margin-bottom:12px; }
-    .chart{ height:120px; margin-bottom:12px; display:block; margin:0 auto; }
-    .legend{ list-style:none; font-size:0.85rem; }
-    .legend li{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-    .dot{ width:10px; height:10px; border-radius:50%; }
-    .table{ font-size:0.85rem; border-collapse:collapse; width:100%; }
-    .table th, .table td{ padding:6px; border:1px solid var(--border-soft); text-align:left; }
-    .table th{ background:rgba(255,255,255,.05); }
-    .supply{ font-size:1rem; text-align:center; margin-bottom:20px; color:var(--sol-a); }
+    .card:hover{ transform:translateY(-4px); }
+    .card h3{ font-size:1.3rem; margin-bottom:16px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+    .card p{ font-size:0.95rem; color:var(--muted); line-height:1.5; margin-bottom:12px; }
+    .chart{ height:140px; margin-bottom:16px; display:block; margin:0 auto; filter:drop-shadow(0 4px 8px rgba(20,241,149,.3)); }
+    .legend{ list-style:none; font-size:0.9rem; padding-left:0; }
+    .legend li{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .dot{ width:12px; height:12px; border-radius:50%; box-shadow:0 0 4px currentColor; }
+    .table{ font-size:0.9rem; border-collapse:separate; border-spacing:0; width:100%; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    .table th, .table td{ padding:10px; text-align:left; border-bottom:1px solid var(--border-soft); }
+    .table th{ background:linear-gradient(90deg, var(--sol-a) 0%, var(--sol-b) 100%); color:#05080b; font-weight:700; }
+    .table tr:last-child td{ border-bottom:none; }
+    .table tr:hover{ background:rgba(255,255,255,.05); }
   </style>
 </head>
 <body>
@@ -81,7 +86,7 @@
   </header>
   <main class="wrap">
     <section class="hero">
-      <img src="https://purple-accused-scorpion-11.mypinata.cloud/ipfs/bafybeifvwriqjehl62zeceva2yp7653jxy7sghyehrqh263aeuqbecsy7i" class="hero-logo" alt="SKR Logo">
+      <img src="https://i.imgur.com/your-sphere-image-url.png" class="hero-logo" alt="SKR Logo"> <!-- Insert sphere here -->
       <p class="hero-subtitle">Mobile SKR - native asset of the ecosystem • Open mobile platform</p>
     </section>
     <div class="supply">Total supply: 10 billion SKR</div>
@@ -91,9 +96,9 @@
         <p>Today's mobile duopoly controls what apps ship, who gets paid, and what rules apply. Solana Mobile is building the alternative — an open mobile platform.</p>
         <p>SKR is the native asset of the Solana Mobile ecosystem. It distributes control, powers curation, and aligns incentives across builders, users, and hardware partners.</p>
         <p>Via SKR, the community governs, builders keep what they earn, and users own a stake in the value they create.</p>
-        <p>Decentralized Governance<br>Stake to Guardians who verify devices and curate the dApp Store</p>
-        <p>Ecosystem Ownership<br>Rewards, community treasury funds, growth initiatives, and protocol development</p>
-        <p>Aligned Incentives<br>Builders, users, and hardware partners share in the value they create.</p>
+        <p><strong>Decentralized Governance:</strong> Stake to Guardians who verify devices and curate the dApp Store.</p>
+        <p><strong>Ecosystem Ownership:</strong> Rewards, community treasury funds, growth initiatives, and protocol development.</p>
+        <p><strong>Aligned Incentives:</strong> Builders, users, and hardware partners share in the value they create.</p>
       </div>
       <div class="card">
         <h3>Inflation Schedule</h3>
@@ -116,9 +121,9 @@
           </defs>
         </svg>
         <ul class="legend" style="margin-top:8px;">
-          <li>Year 1 <span>10% inflation (1bn SKR)</span></li>
-          <li>Annual Decay <span>25% reduction</span></li>
-          <li>Terminal Rate <span>2% per annum</span></li>
+          <li>Year 1: 10% inflation (1bn SKR)</li>
+          <li>Annual Decay: 25% reduction</li>
+          <li>Terminal Rate: 2% per annum</li>
         </ul>
         <button class="btn btn-primary" style="width:100%;">View</button>
       </div>
@@ -203,7 +208,7 @@
             </tr>
           </tbody>
         </table>
-        <button class="btn btn-primary" style="width:100%; margin-top:12px;">View Full Token Distribution Chart</button>
+        <button class="btn btn-primary" style="width:100%; margin-top:16px;">View Full Token Distribution Chart</button>
       </div>
     </section>
   </main>
