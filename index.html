@@ -3,190 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile SKR | Solana Ecosystem</title>
+    <title>Mobile SKR Ecosystem</title>
     <style>
         :root {
-            --bg-dark: #000000;
-            --solana-cyan: #14f195;
-            --solana-purple: #9945ff;
-            --panel-bg: rgba(15, 15, 20, 0.9);
-            --text-white: #ffffff;
+            --bg: #030507;
+            --card-bg: rgba(18, 22, 28, 0.85);
+            --cyan: #14f195;
+            --purple: #9945ff;
+            --blue: #20e3f5;
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
         }
 
-        body, html {
+        body {
             margin: 0; padding: 0;
-            background: var(--bg-dark);
-            color: var(--text-white);
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, sans-serif;
             overflow-x: hidden;
-            min-height: 100vh;
         }
 
-        /* Эффект падающего снега на фоне */
-        #snow {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1;
+        canvas#bg-effect {
+            position: fixed; top: 0; left: 0; z-index: 1;
         }
 
-        .container {
+        .content {
             position: relative; z-index: 10;
             max-width: 1200px; margin: 0 auto; padding: 40px 20px;
-            text-align: center;
         }
 
-        /* Кнопки сверху как на фото */
-        .header-nav {
-            display: flex; justify-content: center; gap: 15px; margin-bottom: 60px;
+        /* Кнопки сверху */
+        .top-nav {
+            display: flex; justify-content: center; gap: 15px; margin-bottom: 50px;
         }
 
-        .btn {
-            padding: 12px 25px; border-radius: 8px; font-weight: 600;
-            border: none; cursor: pointer; transition: 0.3s; font-size: 14px;
+        .nav-btn {
+            padding: 12px 30px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; font-size: 14px;
+            transition: 0.3s;
         }
-        .btn-gray { background: #1c1c1c; color: #fff; border: 1px solid #333; }
-        .btn-cyan { background: linear-gradient(90deg, #14f195, #00d2ff); color: #000; }
-        .btn-purple { background: linear-gradient(90deg, #80ecff, #9945ff); color: #fff; }
+        .btn-wallet { background: #232a33; color: white; border: 1px solid #3d4652; }
+        .btn-airdrop { background: linear-gradient(90deg, #14f195, #20e3f5); color: #000; }
+        .btn-raffle { background: linear-gradient(90deg, #6b8eff, #9945ff); color: white; }
 
-        /* ЦЕНТРАЛЬНАЯ СФЕРА (Точно как на верхнем фото) */
-        .hero-visual {
-            position: relative; width: 400px; height: 400px;
-            margin: 0 auto 30px; display: flex; align-items: center; justify-content: center;
+        /* Центральная 3D сфера */
+        .hero-sphere {
+            position: relative; width: 450px; height: 450px;
+            margin: 0 auto; display: flex; align-items: center; justify-content: center;
         }
 
-        .sphere-grid {
+        #sphere-canvas {
             position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(153, 69, 255, 0.1) 0%, transparent 70%);
-            border: 1px solid rgba(20, 241, 149, 0.2);
-            box-shadow: 0 0 40px rgba(153, 69, 255, 0.2);
-            animation: rotateSphere 15s linear infinite;
         }
 
-        /* Имитация сетки нейронных связей */
-        .sphere-grid::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(20, 241, 149, 0.05) 21px);
-            opacity: 0.5;
-        }
-
-        .solana-logo-container {
-            z-index: 5; transform: scale(1.2);
-        }
-
-        .skr-text {
-            font-size: 80px; font-weight: 900; letter-spacing: 5px;
+        .skr-logo {
+            font-size: 84px; font-weight: 900; letter-spacing: 4px;
             background: linear-gradient(90deg, #14f195, #9945ff);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(20, 241, 149, 0.5));
+            z-index: 5; filter: drop-shadow(0 0 15px rgba(20,241,149,0.4));
         }
 
-        .tagline {
-            font-size: 18px; color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 1px; margin-bottom: 50px;
+        .hero-subtitle {
+            text-align: center; font-size: 18px; margin: 20px 0 60px;
+            color: var(--text); font-weight: 500;
         }
 
-        /* Информационные панели */
-        .info-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px; text-align: left;
+        /* Карточки снизу */
+        .dashboard {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
         }
 
-        .panel {
-            background: var(--panel-bg); padding: 25px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+        .card {
+            background: var(--card-bg); border-radius: 12px;
+            padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px); height: 220px;
         }
 
-        .panel h3 { color: var(--solana-cyan); margin-top: 0; font-size: 16px; text-transform: uppercase; }
-        .panel p { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.6); }
+        .card h3 { color: #fff; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .card p { font-size: 13px; line-height: 1.5; color: var(--text-dim); }
 
-        @keyframes rotateSphere {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* Блок Токеномики (точная копия) */
+        .tokenomics-box {
+            display: flex; flex-direction: column; gap: 10px;
         }
+
+        .pie-container {
+            display: flex; align-items: center; gap: 15px;
+        }
+
+        .donut {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: conic-gradient(#14f195 0% 30%, #9945ff 30% 60%, #20e3f5 60% 85%, #ffb800 85% 100%);
+            position: relative;
+        }
+        .donut::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 40px; height: 40px;
+            background: #12161c; border-radius: 50%;
+        }
+
+        .legend { font-size: 11px; list-style: none; padding: 0; margin: 0; color: var(--text-dim); }
+        .legend li { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        .token-table {
+            width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px;
+        }
+        .token-table td { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-dim); }
+        .token-table td:last-child { text-align: right; color: #fff; }
+
+        @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
 
-<canvas id="snow"></canvas>
+<canvas id="bg-effect"></canvas>
 
-<div class="container">
-    <div class="header-nav">
-        <button class="btn btn-gray">Connect Wallet</button>
-        <button class="btn btn-cyan">Participate in Airdrop</button>
-        <button class="btn btn-purple">Join 3 SOL Raffle</button>
+<div class="content">
+    <div class="top-nav">
+        <button class="btn-wallet nav-btn">Connect Wallet</button>
+        <button class="btn-airdrop nav-btn">Participate in Airdrop</button>
+        <button class="btn-raffle nav-btn">Join 3 SOL Giveaway</button>
     </div>
 
-    <div class="hero-visual">
-        <div class="sphere-grid"></div>
-        <div class="solana-logo-container">
-            <div class="skr-text">SKR</div>
-        </div>
+    <div class="hero-sphere">
+        <canvas id="sphere-canvas"></canvas>
+        <div class="skr-logo">SKR</div>
     </div>
 
-    <div class="tagline">
+    <div class="hero-subtitle">
         Mobile SKR • Native Ecosystem Asset • Open Mobile Platform
     </div>
 
-    <div class="info-grid">
-        <div class="panel">
+    <div class="dashboard">
+        <div class="card">
             <h3>Our Mission</h3>
-            <p>Today mobile duopoly decides which apps are available. Mobile SKR builds an open platform where value is shared with the community.</p>
+            <p>Mobile SKR builds an open mobile platform where management and value are shared with the community. We break the app store monopoly.</p>
         </div>
-        <div class="panel">
+        <div class="card">
             <h3>Linear Inflation</h3>
-            <p>Year 1: 10% inflation. Annual decay of 25% per year until reaching a terminal rate of 2% for long-term security.</p>
+            <p>Year 1: 10% inflation from total supply. Annual decay of 25% per year until reaching a terminal rate of 2%.</p>
+            <div style="height: 50px; border-bottom: 2px solid var(--cyan); margin-top: 10px; background: linear-gradient(transparent, rgba(20,241,149,0.1))"></div>
         </div>
-        <div class="panel">
+        <div class="card">
             <h3>Airdrop Pool</h3>
-            <p>3,000,000 SKR total allocation. Each eligible wallet receives 500 SKR. Claim your share before the pool is exhausted.</p>
+            <p>3,000,000 SKR allocated. Each user gets 500 SKR per unique wallet. Connect and claim your share before the pool ends.</p>
+            <button class="btn-airdrop nav-btn" style="width:100%; margin-top:15px; padding: 8px;">Claim Now</button>
+        </div>
+        <div class="card">
+            <h3>Tokenomics</h3>
+            <div class="tokenomics-box">
+                <div class="pie-container">
+                    <div class="donut"></div>
+                    <ul class="legend">
+                        <li><span class="dot" style="background:#14f195"></span> Airdrops</li>
+                        <li><span class="dot" style="background:#9945ff"></span> Growth</li>
+                        <li><span class="dot" style="background:#20e3f5"></span> Team</li>
+                        <li><span class="dot" style="background:#ffb800"></span> Treasury</li>
+                    </ul>
+                </div>
+                <table class="token-table">
+                    <tr><td>Airdrops</td><td>30%</td></tr>
+                    <tr><td>Ecosystem</td><td>25%</td></tr>
+                    <tr><td>Team</td><td>15%</td></tr>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Скрипт красивого снега
-    const canvas = document.getElementById('snow');
-    const ctx = canvas.getContext('2d');
+    // 1. Анимация 3D Сферы (Plexus Effect)
+    const sCanvas = document.getElementById('sphere-canvas');
+    const sCtx = sCanvas.getContext('2d');
+    let points = [];
+    const numPoints = 60;
+    const radius = 180;
+
+    function initSphere() {
+        sCanvas.width = 450; sCanvas.height = 450;
+        for(let i=0; i<numPoints; i++) {
+            let theta = Math.random() * Math.PI * 2;
+            let phi = Math.acos((Math.random() * 2) - 1);
+            points.push({
+                x: radius * Math.sin(phi) * Math.cos(theta),
+                y: radius * Math.sin(phi) * Math.sin(theta),
+                z: radius * Math.cos(phi)
+            });
+        }
+    }
+
+    function drawSphere() {
+        sCtx.clearRect(0,0,450,450);
+        let time = Date.now() * 0.0005;
+        sCtx.translate(225, 225);
+        
+        points.forEach((p, i) => {
+            // Вращение
+            let x = p.x * Math.cos(time) - p.z * Math.sin(time);
+            let z = p.x * Math.sin(time) + p.z * Math.cos(time);
+            let y = p.y * Math.cos(time*0.5) - z * Math.sin(time*0.5);
+            
+            // Отрисовка точек
+            sCtx.fillStyle = i % 2 === 0 ? '#14f195' : '#9945ff';
+            sCtx.beginPath();
+            sCtx.arc(x, y, 2, 0, Math.PI*2);
+            sCtx.fill();
+
+            // Линии между точками (создает сетку)
+            points.forEach((p2, j) => {
+                if(i === j) return;
+                let dx = x - (p2.x * Math.cos(time) - p2.z * Math.sin(time));
+                let dist = Math.sqrt(dx*dx);
+                if(dist < 50) {
+                    sCtx.strokeStyle = 'rgba(153, 69, 255, 0.1)';
+                    sCtx.beginPath(); sCtx.moveTo(x, y); 
+                    sCtx.lineTo(p2.x, p2.y); sCtx.stroke();
+                }
+            });
+        });
+        sCtx.translate(-225, -225);
+        requestAnimationFrame(drawSphere);
+    }
+
+    // 2. Эффект снега на фоне
+    const bgCanvas = document.getElementById('bg-effect');
+    const bgCtx = bgCanvas.getContext('2d');
     let particles = [];
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.onresize = resize;
-    resize();
-
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speed = Math.random() * 1 + 0.2;
-            this.opacity = Math.random() * 0.5;
-        }
-        update() {
-            this.y += this.speed;
-            if (this.y > canvas.height) this.y = -10;
-        }
-        draw() {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
+    function initBg() {
+        bgCanvas.width = window.innerWidth;
+        bgCanvas.height = window.innerHeight;
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * bgCanvas.width,
+                y: Math.random() * bgCanvas.height,
+                v: Math.random() * 0.5 + 0.2,
+                s: Math.random() * 2
+            });
         }
     }
 
-    for(let i = 0; i < 150; i++) particles.push(new Particle());
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animate);
+    function drawBg() {
+        bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
+        bgCtx.fillStyle = 'rgba(255,255,255,0.2)';
+        particles.forEach(p => {
+            p.y += p.v;
+            if(p.y > bgCanvas.height) p.y = 0;
+            bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.s, 0, Math.PI*2); bgCtx.fill();
+        });
+        requestAnimationFrame(drawBg);
     }
-    animate();
+
+    window.addEventListener('resize', initBg);
+    initSphere(); drawSphere();
+    initBg(); drawBg();
 </script>
-
 </body>
 </html>
